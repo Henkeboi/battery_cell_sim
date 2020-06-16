@@ -1,13 +1,13 @@
 clearvars;
 
-H_numerator = [1 20 80];
-H_denominator = [1 2 8];
+G_numerator = [1 20 80];
+G_denominator = [1 2 8];
 
 sampling_freq = 256;
 T = 1 / sampling_freq;
 min_T_len = 6.5;
 num_samples = 2 ^ (ceil(log2(min_T_len * sampling_freq)));
-hd = finely_sampled_continuous_time_impuls_response(H_numerator, H_denominator, sampling_freq, T, num_samples);
+hd = finely_sampled_continuous_time_impuls_response(G_numerator, G_denominator, sampling_freq, T, num_samples);
 
 h_step = continuous_time_step_response(hd, T);
 
@@ -19,7 +19,7 @@ T_shifted = 0.1;
 % Plot
 stem(time_vector, h_pulse,'filled'); 
 hold on;
-H_true = tf([1 20 80], [1 2 8]);
+H_true = tf(G_numerator, G_denomenator);
 [himpDiscTrue, timpDiscTrue] = impulse(c2d(H_true, T_shifted), 5);
 himpDiscTrue = T_shifted * himpDiscTrue;
 plot(timpDiscTrue, himpDiscTrue, 'r.', 'markersize',8);
@@ -34,12 +34,22 @@ function [h_step] = continuous_time_step_response(hd, T)
     h_step = T * cumsum(hd); 
 end
 
-function [hd] = finely_sampled_continuous_time_impuls_response(H_numerator, H_denominator, sampling_freq, T, num_samples)
+function [hd] = finely_sampled_continuous_time_impuls_response(G_numerator, G_denominator, sampling_freq, T, num_samples)
     freq_vector = 0 : num_samples - 1;
     s = (2j / T) * tan(pi * freq_vector / num_samples);
-    % Hd[f] is the DFT of H(z) found by the bilinear transform of H(s) which is the continuous time impulse response
-    Hd = (s .^2 + 20 * s + 80) ./ (s .^ 2 + 2 * s + 8); 
-    % Approximation to the continuous time impulse response
+
+    G_numerator_accumulated = 0;
+    for i = 1 : size(G_numerator, 2)
+        G_numerator_accumulated = G_numerator_accumulated + s .^ (size(G_numerator, 2) - i) * G_numerator(i);
+    end
+    G_denominator_accumulated = 0;
+    for i = 1 : size(G_denominator, 2)
+        G_denominator_accumulated = G_denominator_accumulated + s .^ (size(G_denominator, 2) - i) * G_denominator(i);
+    end
+
+    % Hd[f] is the DFT of H(z) found by the bilinear transform of H(s) which is the continuous time impulse response.
+    Hd = G_numerator_accumulated ./ G_denominator_accumulated; 
+    % Approximation to the continuous time impulse response.
     hd = real(ifft(Hd)) * sampling_freq; 
 end
 
