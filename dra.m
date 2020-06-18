@@ -1,6 +1,3 @@
-clearvars;
-run('parameters.m')
-
 % Params
 sampling_freq = 256;
 T = 1 / sampling_freq;
@@ -24,7 +21,6 @@ h_pulse = [0 diff(interp1(td, h_step, time_vector))];
 freq_vector = 0 : num_samples - 1;
 s = (2j / T) * tan(pi * freq_vector / num_samples);
 run('calculate_nu_neg.m');
-disp(nu_neg);
 
 % Hd[f] is the DFT of H(z) found by the bilinear transform of H(s) which is the continuous time impulse response.
 Hd = (0.5 * s - 3) ./ (s .^ 2 + 6 * s + 2);
