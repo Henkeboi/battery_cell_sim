@@ -26,6 +26,7 @@ solid_max_concentration_pos = 22860;
 initial_electrolyte_average_concentration_neg = 2000; 
 initial_electrolyte_average_concentration_sep = 2000;
 initial_electrolyte_average_concentration_pos = 2000;
+cse_neg = 1000; % Inital negative electrode surface concentration
 diffusivity_neg = 3.9e-14;
 diffusivity_pos = 1e-13;
 diffusivity_neg_electorlyte = 7.5e-11;

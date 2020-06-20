@@ -42,6 +42,3 @@ for i = 0 : 1000
     y = C_estimate * debiased_surface_concentration + D_estimate * u;
     debiased_surface_concentration = next_debiased_surface_concentration;
 end
-
-
-
