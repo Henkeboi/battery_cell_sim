@@ -8,7 +8,7 @@ function [A_estimate, B_estimate, C_estimate, D_estimate] = estimate_cse_neg_ss(
     s = (2j / T) * tan(pi * freq_vector / num_samples);
     
     num = s / diffusivity_neg * radius_neg ^ 2.0 + 3.0 - 3.0 * radius_neg * sqrt(s / diffusivity_neg) .* coth(radius_neg * sqrt(s / diffusivity_neg));
-    den = s .* radius_neg .* (1.0 - radius_neg .* sqrt(s / diffusivity_neg) .* coth(radius_neg .* sqrt(s / radius_neg)));
+    den = s .* radius_neg .* (1.0 - radius_neg .* ((s / diffusivity_neg) .^ 0.5) .* coth(radius_neg .* (s / radius_neg) .^ 0.5));
     H_d = num ./ den; % TODO: Add J(z, s)
     h_d = real(ifft(H_d)) * sampling_freq;
     hstep = T * cumsum(h_d);
@@ -31,14 +31,8 @@ function [A_estimate, B_estimate, C_estimate, D_estimate] = estimate_cse_neg_ss(
     extended_observability = U * sigma;
     extended_controllability = sigma * V';
 
-    % If there is a pole at 0:
-    % A_estimate = [pinv(extended_observability) * H_shifted * pinv(extended_controllability) zeros(system_order, 1); 1 zeros(1, system_order)];
-    % B_estimate = [extended_controllability(:, 1); 0.1];
-    % C_estimate = [extended_observability(1, :), 0];
-    % D_estimate = [pulse(1)];
     A_estimate = [pinv(extended_observability) * H_shifted * pinv(extended_controllability)];
     B_estimate = [extended_controllability(:, 1)];
     C_estimate = [extended_observability(1, :)];
     D_estimate = [pulse(1)];
-    % stem(time_d, pulse);
 end
