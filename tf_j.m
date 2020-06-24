@@ -27,25 +27,25 @@ function [tf_j] = phi_se_tf(cse, z_coordinates, const)
     eps = const.porosity_solid_neg;
 
     % Calculate nu
-
-    cse_j = Rs / D ./ (1 - beta .* coth(beta));
-
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / D * (1 ./ (Rs * beta .* coth(beta))));
     % nu_test_inf = L * sqrt((alpha / kappa + alpha / sigma) / (Rse)); % From Gregory Plett.
 
-    % Calculate TF potential between solid and electrolyte
-    tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp 
-    tf_phi0 = (L * z * z * (kappa + sigma) - 2 * L * z * kappa + L * kappa) / (2 * A * kappa * sigma) .* ones(1, size(s, 2)); % Found using maple.
-    tf_phiinf = zeros(1, size(s, 2)); % Undefined maybe.
+    % Calculate TF potential between solid and electrolyte.
+    tf_phi = zeros(size(s, 2), size(z_coordinates, 2));
+    for i = 1 : size(z_coordinates, 2)
+        z = z_coordinates(1, i); 
+        tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp .
+        tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
+    end
 
-    tf_phi = tf_pot_se(cse_neg, z_coordinates, const);
-    tf_j = nu .* tf_phi .* nu / (alpha * F * L * L * ((1 / kappa) + (1 / sigma)));
     tf_j0 = 1 / (L * alpha * F * A); % Found using maple.
-    for i = 1 : size(s, 2)
-        if isnan(tf_j(1, i)) && s(1, i) == 0
-           tf_j(1, i) = tf_j0;
-        else if isnan(tf_j(1, i))
-            tf_j(1, i) = 0;
+    for i = 1 : size(z_coordinates, 2) 
+        for j = 1 : size(s, 2)
+            if isnan(tf_j(j, i)) && s(1, j) == 0
+               tf_j(j, i) = tf_j0;
+            else if isnan(tf_j(j, i))
+                tf_j(j, i) = 0;
+            end
         end
     end
 end
