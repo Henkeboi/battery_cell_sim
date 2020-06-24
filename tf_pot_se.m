@@ -34,12 +34,12 @@ function [tf_phi] = phi_se_tf(cse, z_coordinates, const)
     tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp 
     tf_phi0 = (L * z * z * (kappa + sigma) - 2 * L * z * kappa + L * kappa) / (2 * A * kappa * sigma) .* ones(1, size(s, 2)); % Found using maple.
     tf_phiinf = zeros(1, size(s, 2)); % Undefined maybe.
-    % tf_phi = tf_phi - Uovc_d ./ (eps * A * F * L * s);
-    % for i = 1 : size(s, 2)
-    %     if isnan(tf_phi(1, i)) && s(1, i) == 0
-    %         tf_phi(1, i) = tf_phi0(1, i);
-    %     else if isnan(tf_phi(1, i))
-    %         tf_phi(1, i) = tf_phiinf(1, i);
-    %     end
-    % end
+    tf_phi = tf_phi - Uovc_d ./ (eps * A * F * L * s);
+    for i = 1 : size(s, 2)
+        if isnan(tf_phi(1, i)) && s(1, i) == 0
+            tf_phi(1, i) = tf_phi0(1, i);
+        else if isnan(tf_phi(1, i))
+            tf_phi(1, i) = tf_phiinf(1, i);
+        end
+    end
 end

@@ -1,8 +1,11 @@
 % TODO: Tune ss estimation parameters.
-function [A_estimate, B_estimate, C_estimate, D_estimate] = estimate_cse_neg_ss(diffusivity_neg, radius_neg)
-    sampling_freq = 190;
+function [A_estimate, B_estimate, C_estimate, D_estimate] = estimate_cse_neg_ss(const)
+    radius_neg = const.radius_neg;
+    diffusivity_neg  = const.diffusivity_neg;
+
+    sampling_freq = 200;
     T = 1 / sampling_freq;
-    min_T_len = 400;
+    min_T_len = 10;
     num_samples = 2 ^ (ceil(log2(min_T_len * sampling_freq)));
     freq_vector = 1 : num_samples - 1;
     s = (2j / T) * tan(pi * freq_vector / num_samples);
@@ -13,7 +16,7 @@ function [A_estimate, B_estimate, C_estimate, D_estimate] = estimate_cse_neg_ss(
     h_d = real(ifft(H_d)) * sampling_freq;
     hstep = T * cumsum(h_d);
 
-    step_size = 0.1;
+    step_size = 0.01;
     time_d = 1 : step_size : min_T_len;
     td = T * (1 : num_samples - 1);
     pulse = [0 diff(interp1(td, hstep, time_d))];

@@ -1,8 +1,8 @@
-function [tf_j] = phi_se_tf(cse, z_coordinates, const)
+function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, const)
     sampling_f = 200;
     T = 1 / sampling_f;
-    min_T_len = 4;
-    num_samples = 2 ^ (ceil(log2(sampling_f * min_T_len)));
+    T_len = 100;
+    num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));
     for i = 1 : size(f_vector, 2)
@@ -10,11 +10,12 @@ function [tf_j] = phi_se_tf(cse, z_coordinates, const)
     end
 
     cse_neg = cse;
-    z = 0.1; % z coordinate
     Uovc_d = calculate_ocv_derivative_neg(cse_neg, const);
 
     % Declare params
-    Rse = const.R_ct_neg + const.R_film_neg;
+    Rct = const.R_ct_neg;
+    Rfilm = const.R_film_neg;
+    Rse = Rct + Rfilm;
     Rs = const.radius_neg;
     L = const.L_neg;
     F = const.F;
@@ -28,17 +29,16 @@ function [tf_j] = phi_se_tf(cse, z_coordinates, const)
 
     % Calculate nu
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / D * (1 ./ (Rs * beta .* coth(beta))));
-    % nu_test_inf = L * sqrt((alpha / kappa + alpha / sigma) / (Rse)); % From Gregory Plett.
 
     % Calculate TF potential between solid and electrolyte.
     tf_phi = zeros(size(s, 2), size(z_coordinates, 2));
     for i = 1 : size(z_coordinates, 2)
         z = z_coordinates(1, i); 
-        tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp .
+        tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp.
         tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
     end
 
-    tf_j0 = 1 / (L * alpha * F * A); % Found using maple.
+    tf_j0 = 1 / (L * alpha * F * A); % Found using Maple.
     for i = 1 : size(z_coordinates, 2) 
         for j = 1 : size(s, 2)
             if isnan(tf_j(j, i)) && s(1, j) == 0
@@ -47,5 +47,16 @@ function [tf_j] = phi_se_tf(cse, z_coordinates, const)
                 tf_j(j, i) = 0;
             end
         end
+    end
+
+    % Find res0
+    res0 = zeros(size(z_coordinates, 2), size(z_coordinates, 2));
+
+    % Find the unit impulse response where t = 0 and s -> inf.
+    nu_inf = L * sqrt((alpha / kappa + alpha / sigma) / (Rct + Rfilm));  % From Gregory Plett.
+    D = zeros(size(nu_inf, 2));
+    
+    if any(isnan(tf_j))
+        error("NAN in tf_j");
     end
 end
