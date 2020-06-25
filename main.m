@@ -3,8 +3,53 @@ run('parameters.m');
 
 cse_neg = 2000;
 z_coordinates = [0.0 .3 0.6 1.0];
-[tf_j, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
-dra(tf_j, res0, sampling_freq, T_len, const)
+[tf_j_neg, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
+[tf_j_pos, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'pos');
+% t_vector = 1 : size(tf_j, 2)
+% plot(t_vector, tf_j_neg)
+
+[A_est, B_est, C_est, D_est] = dra(tf_j_pos, res0, sampling_freq, T_len, const);
+% sys = ss(A_est, B_est, C_est, D_est, 0.01);
+% impulse(sys)
+
+
+steps = 1000;
+li_flux_vector = zeros(steps, 1);
+X_li_flux = zeros(size(A_est, 2), 1);
+for current_step = 1 : steps
+    X_li_flux = A_est * X_li_flux + B_est;
+    Y_li_flux = C_est * X_li_flux + D_est;
+    if current_step == 1
+        li_flux_vector(current_step, 1) = 0;
+    else
+        li_flux_vector(current_step, 1) = li_flux_vector(current_step - 1, 1) + Y_li_flux;
+    end
+end
+t_vector = 1 : size(li_flux_vector, 1);
+plot(t_vector, li_flux_vector)
+hold on;
+
+[A_est, B_est, C_est, D_est] = dra(tf_j_neg, res0, sampling_freq, T_len, const);
+
+li_flux_vector = zeros(steps, 1);
+X_li_flux = zeros(size(A_est, 2), 1);
+for current_step = 1 : steps
+    X_li_flux = A_est * X_li_flux + B_est;
+    Y_li_flux = C_est * X_li_flux + D_est;
+    if current_step == 1
+        li_flux_vector(current_step, 1) = 0;
+    else
+        li_flux_vector(current_step, 1) = li_flux_vector(current_step - 1, 1) + Y_li_flux;
+    end
+end
+t_vector = 1 : size(li_flux_vector, 1);
+plot(t_vector, li_flux_vector)
+
+
+fprintf("\n\n");
+
+
+
 
 % Initial state variables.
 % cse_neg = 0;

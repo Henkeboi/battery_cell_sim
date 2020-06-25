@@ -1,7 +1,7 @@
 function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, const, electrode)
-    sampling_f = 200;
+    sampling_f = 400;
     T = 1 / sampling_f;
-    T_len = 100;
+    T_len = 10;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));
@@ -56,7 +56,7 @@ function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, cons
             tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
         else
             tf_phi = -L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp.
-            tf_j(:, i) = -nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
+            tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
         end
     end
 

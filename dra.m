@@ -1,4 +1,4 @@
-function [] = dra(transfer_function, res0, sampling_freq, T_len, const)
+function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_freq, T_len, const)
     % sampling_freq and T_len needs to be the same as in the transfer function.
     my_TF = transfer_function(:, 1); % Temp Simpify
     
@@ -29,6 +29,7 @@ function [] = dra(transfer_function, res0, sampling_freq, T_len, const)
     extended_observability = U * sigma;
     extended_controllability = sigma * V';
 
+
     A_est = [pinv(extended_observability) * H_shifted * pinv(extended_controllability) zeros(system_order, 1); 1 zeros(1, system_order)];
     B_est = [extended_controllability(:, 1); T_shifted]; 
     C_est = [extended_observability(1, :), res0(1)]; % z(1) choosen
@@ -37,24 +38,24 @@ function [] = dra(transfer_function, res0, sampling_freq, T_len, const)
     sys = ss(A_est, B_est, C_est, D_est, T_shifted);
     gain = dcgain(sys);
 
-    sys_scaled = ss(A_est, B_est / gain, C_est, D_est, T_shifted);
+    % B_est = B_est / gain;
 
-    steps = 1000;
-    li_flux_neg_vector = zeros(steps, 1);
-    X_li_flux_neg = zeros(size(A_est, 2), 1);
-    for current_step = 1 : steps
-        X_li_flux_neg = A_est * X_li_flux_neg + B_est ;
-        Y_li_flux_neg = C_est * X_li_flux_neg + D_est ;
-        if current_step == 1
-            flux_neg_vector(current_step, 1) = 0;
-        else
-            li_flux_neg_vector(current_step, 1) = li_flux_neg_vector(current_step - 1, 1) + Y_li_flux_neg;
-        end
-    end
-    t_vector = 1 : size(li_flux_neg_vector, 1);
-    plot(t_vector, li_flux_neg_vector)
+    % steps = 1000;
+    % li_flux_neg_vector = zeros(steps, 1);
+    % X_li_flux_neg = zeros(size(A_est, 2), 1);
+    % for current_step = 1 : steps
+    %     X_li_flux_neg = A_est * X_li_flux_neg + B_est;
+    %     Y_li_flux_neg = C_est * X_li_flux_neg + D_est;
+    %     if current_step == 1
+    %         flux_neg_vector(current_step, 1) = 0;
+    %     else
+    %         li_flux_neg_vector(current_step, 1) = li_flux_neg_vector(current_step - 1, 1) + Y_li_flux_neg;
+    %     end
+    % end
+    % t_vector = 1 : size(li_flux_neg_vector, 1);
+    % plot(t_vector, li_flux_neg_vector)
 
-    fprintf("\n\n");
+    % fprintf("\n\n");
 
 
     % tf_pulse = real(ifft(my_tf)) * sampling_freq;
