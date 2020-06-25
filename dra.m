@@ -9,7 +9,7 @@ function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_fr
     h_step = T * cumsum(my_tf); 
     td = T * (0 : num_samples - 1);
 
-    T_shifted = 0.01;
+    T_shifted = 0.1;
     time_vector = 0 : T_shifted : T_len;
 
     h_pulse = [0 diff(interp1(td, h_step, time_vector))];
@@ -35,8 +35,8 @@ function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_fr
     C_est = [extended_observability(1, :), res0(1)]; % z(1) choosen
     D_est = [0];
 
-    sys = ss(A_est, B_est, C_est, D_est, T_shifted);
-    gain = dcgain(sys);
+    % sys = ss(A_est, B_est, C_est, D_est, T_shifted);
+    % gain = dcgain(sys);
 
     % B_est = B_est / gain;
 

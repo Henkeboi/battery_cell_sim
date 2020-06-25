@@ -1,7 +1,7 @@
 clearvars;
 run('parameters.m');
 
-cse_neg = 2000;
+cse_neg = 11000;
 z_coordinates = [0.0 .3 0.6 1.0];
 [tf_j_neg, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
 [tf_j_pos, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'pos');
@@ -13,37 +13,42 @@ z_coordinates = [0.0 .3 0.6 1.0];
 % impulse(sys)
 
 
-steps = 1000;
-li_flux_vector = zeros(steps, 1);
+steps = 100000;
+li_flux_vector_pos = zeros(steps, 1);
 X_li_flux = zeros(size(A_est, 2), 1);
 for current_step = 1 : steps
     X_li_flux = A_est * X_li_flux + B_est;
     Y_li_flux = C_est * X_li_flux + D_est;
     if current_step == 1
-        li_flux_vector(current_step, 1) = 0;
+        li_flux_vector_pos(current_step, 1) = 0;
     else
-        li_flux_vector(current_step, 1) = li_flux_vector(current_step - 1, 1) + Y_li_flux;
+        li_flux_vector_pos(current_step, 1) = li_flux_vector_pos(current_step - 1, 1) + Y_li_flux;
     end
 end
-t_vector = 1 : size(li_flux_vector, 1);
-plot(t_vector, li_flux_vector)
+t_vector = 1 : size(li_flux_vector_pos, 1);
+plot(t_vector, li_flux_vector_pos)
 hold on;
+text(max(t_vector), min(li_flux_vector_pos), 'pos')
 
 [A_est, B_est, C_est, D_est] = dra(tf_j_neg, res0, sampling_freq, T_len, const);
 
-li_flux_vector = zeros(steps, 1);
+li_flux_vector_neg = zeros(steps, 1);
 X_li_flux = zeros(size(A_est, 2), 1);
 for current_step = 1 : steps
     X_li_flux = A_est * X_li_flux + B_est;
     Y_li_flux = C_est * X_li_flux + D_est;
     if current_step == 1
-        li_flux_vector(current_step, 1) = 0;
+        li_flux_vector_neg(current_step, 1) = 0;
     else
-        li_flux_vector(current_step, 1) = li_flux_vector(current_step - 1, 1) + Y_li_flux;
+        li_flux_vector_neg(current_step, 1) = li_flux_vector_neg(current_step - 1, 1) + Y_li_flux;
     end
 end
-t_vector = 1 : size(li_flux_vector, 1);
-plot(t_vector, li_flux_vector)
+t_vector = 1 : size(li_flux_vector_neg, 1);
+plot(t_vector, li_flux_vector_neg)
+text(max(t_vector), min(li_flux_vector_neg), 'neg')
+grid on;
+
+
 
 
 fprintf("\n\n");

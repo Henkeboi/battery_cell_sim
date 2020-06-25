@@ -39,7 +39,7 @@ function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, cons
         kappa = const.kappa_neg;
         beta = Rs * sqrt(s / D);
         eps = const.porosity_solid_neg;
-        Uovc_d = calculate_ocv_derivative_neg(cse, const); % TODO use Uovc_d pos
+        Uovc_d = calculate_ocv_derivative_pos(cse, const);
     else
         error("Bad electrode selection");
     end
@@ -55,8 +55,8 @@ function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, cons
             tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp.
             tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
         else
-            tf_phi = -L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp.
-            tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
+            tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp.
+            tf_j(:, i) = -nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
         end
     end
 
