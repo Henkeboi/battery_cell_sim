@@ -3,7 +3,7 @@ run('parameters.m');
 
 cse_neg = 2000;
 z_coordinates = [0.0 .3 0.6 1.0];
-[tf_j, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const);
+[tf_j, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
 dra(tf_j, res0, sampling_freq, T_len, const)
 
 % Initial state variables.

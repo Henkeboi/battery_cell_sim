@@ -39,7 +39,7 @@ function [] = dra(transfer_function, res0, sampling_freq, T_len, const)
 
     sys_scaled = ss(A_est, B_est / gain, C_est, D_est, T_shifted);
 
-    steps = 10000000;
+    steps = 1000;
     li_flux_neg_vector = zeros(steps, 1);
     X_li_flux_neg = zeros(size(A_est, 2), 1);
     for current_step = 1 : steps
