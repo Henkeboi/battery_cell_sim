@@ -35,11 +35,11 @@ for step = 1 : steps
 end
 
 t = 1 : steps;
-subplot(2, 1, 1);
+% subplot(2, 1, 1);
 for i = 1 : size(li_flux_pos, 2)
-    plot(t, li_flux_pos(:, i))
-    text(max(t), max(li_flux_pos(:, i)), "Pos" + num2str(z_coordinates(i)));
-    hold on;
+    % plot(t, li_flux_pos(:, i))
+    % text(max(t), max(li_flux_pos(:, i)), "Pos" + num2str(z_coordinates(i)));
+    % hold on;
 end
 grid on;
 
@@ -73,14 +73,41 @@ for step = 1 : steps
 end
 
 t = 1 : steps;
-subplot(2, 1, 2);
+% subplot(2, 1, 2);
 for i = 1 : size(li_flux_neg, 2)
-    plot(t, li_flux_neg(:, i))
-    text(max(t), max(li_flux_neg(:, i)), "Neg" + num2str(z_coordinates(i)));
-    hold on;
+    % plot(t, li_flux_neg(:, i))
+    % text(max(t), max(li_flux_neg(:, i)), "Neg" + num2str(z_coordinates(i)));
+    % hold on;
 end
-grid on;
+% grid on;
 
+end_time = 22000;
+cse_neg =  25000;
+cse_pos =  21000;
+SOC = zeros(1, end_time);
+ocv_d_neg = zeros(1, end_time);
+ocv_d_pos = zeros(1, end_time);
+for i = 1 : end_time
+    SOC(1, i) = cse_neg / const.solid_max_c_neg;
+    ocv_d_neg(i) = calculate_ocv_derivative_neg(cse_neg, const);
+    ocv_d_pos(i) = calculate_ocv_derivative_pos(cse_pos, const);
+    cse_neg = cse_neg - 1;
+    cse_pos = cse_pos - 1;
+end
+t = 1 : end_time;
+subplot(3, 1, 1);
+plot(t, ocv_d_neg);
+text(max(t), min(ocv_d_pos), "Neg Uocv derivative");
+hold on;
+grid on;
+subplot(3, 1, 2);
+plot(t, ocv_d_pos);
+hold on;
+grid on;
+text(max(t), min(ocv_d_pos), "Pos Uocv derivative");
+subplot(3, 1, 3);
+plot(t, SOC)
+text(max(t), min(SOC), "SOC");
 
 
 
