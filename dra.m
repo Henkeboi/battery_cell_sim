@@ -1,12 +1,11 @@
-function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_freq, T_len, const)
+function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, D, sampling_freq, T_len, const)
     % sampling_freq and T_len needs to be the same as in the transfer function.
-    my_TF = transfer_function(:, 1); % Temp Simpify
     
     T = 1 / sampling_freq;
     num_samples = 2 ^ (ceil(log2(T_len * sampling_freq)));
 
-    my_tf  = real(ifft(my_TF)) * sampling_freq; 
-    h_step = T * cumsum(my_tf); 
+    tf_c  = real(ifft(transfer_function)) * sampling_freq; 
+    h_step = T * cumsum(tf_c); 
     td = T * (0 : num_samples - 1);
 
     T_shifted = 0.1;
@@ -33,11 +32,10 @@ function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_fr
     A_est = [pinv(extended_observability) * H_shifted * pinv(extended_controllability) zeros(system_order, 1); 1 zeros(1, system_order)];
     B_est = [extended_controllability(:, 1); T_shifted]; 
     C_est = [extended_observability(1, :), res0(1)]; % z(1) choosen
-    D_est = [0];
+    D_est = [D];
 
     % sys = ss(A_est, B_est, C_est, D_est, T_shifted);
     % gain = dcgain(sys);
-
     % B_est = B_est / gain;
 
     % steps = 1000;

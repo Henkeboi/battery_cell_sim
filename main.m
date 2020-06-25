@@ -1,52 +1,127 @@
 clearvars;
 run('parameters.m');
 
-cse_neg = 11000;
-z_coordinates = [0.0 .3 0.6 1.0];
-[tf_j_neg, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
-[tf_j_pos, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'pos');
-% t_vector = 1 : size(tf_j, 2)
-% plot(t_vector, tf_j_neg)
+cse_pos = 10000;
+cse_neg = 10000;
+z_coordinates = [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0];
 
-[A_est, B_est, C_est, D_est] = dra(tf_j_pos, res0, sampling_freq, T_len, const);
-% sys = ss(A_est, B_est, C_est, D_est, 0.01);
-% impulse(sys)
+[all_tf_j_pos, res0, D, sampling_freq, T_len] = tf_j(cse_pos, z_coordinates, const, 'pos');
+A_estimates = [];
+B_estimates = [];
+C_estimates = [];
+D_estimates = [];
+for i = 1 : size(all_tf_j_pos, 2)
+    [A_est, B_est, C_est, D_est] = dra(all_tf_j_pos(:, i), res0, D, sampling_freq, T_len, const);
+    A_estimates = [A_estimates; A_est];
+    B_estimates = [B_estimates; B_est];
+    C_estimates = [C_estimates; C_est];
+    D_estimates = [D_estimates, D_est];
+end
 
 
-steps = 100000;
-li_flux_vector_pos = zeros(steps, 1);
-X_li_flux = zeros(size(A_est, 2), 1);
-for current_step = 1 : steps
-    X_li_flux = A_est * X_li_flux + B_est;
-    Y_li_flux = C_est * X_li_flux + D_est;
-    if current_step == 1
-        li_flux_vector_pos(current_step, 1) = 0;
-    else
-        li_flux_vector_pos(current_step, 1) = li_flux_vector_pos(current_step - 1, 1) + Y_li_flux;
+steps = 10000;
+li_flux_pos = zeros(steps, size(all_tf_j_pos, 2));
+X = zeros(size(A_estimates, 2), size(all_tf_j_pos, 2));
+for step = 1 : steps
+    for i = 1 : size(all_tf_j_pos, 2)
+        A = A_estimates(i * size(A_estimates, 2) - size(A_estimates, 2) + 1: i * size(A_estimates, 2), 1 : size(A_estimates, 2));
+        B = B_estimates(i * size(A_estimates, 2) - size(A_estimates, 2) + 1: i * size(A_estimates, 2), 1);
+        C = C_estimates(i, 1 : size(A_estimates, 2));
+        D = D_estimates(1, i);
+        X(:, i) = A * X(:, i) + B;
+        Y = C * X(:, i) + D;
+        li_flux_pos(step, i) = Y;
     end
 end
-t_vector = 1 : size(li_flux_vector_pos, 1);
-plot(t_vector, li_flux_vector_pos)
-hold on;
-text(max(t_vector), min(li_flux_vector_pos), 'pos')
 
-[A_est, B_est, C_est, D_est] = dra(tf_j_neg, res0, sampling_freq, T_len, const);
-
-li_flux_vector_neg = zeros(steps, 1);
-X_li_flux = zeros(size(A_est, 2), 1);
-for current_step = 1 : steps
-    X_li_flux = A_est * X_li_flux + B_est;
-    Y_li_flux = C_est * X_li_flux + D_est;
-    if current_step == 1
-        li_flux_vector_neg(current_step, 1) = 0;
-    else
-        li_flux_vector_neg(current_step, 1) = li_flux_vector_neg(current_step - 1, 1) + Y_li_flux;
-    end
+t = 1 : steps;
+subplot(2, 1, 1);
+for i = 1 : size(li_flux_pos, 2)
+    plot(t, li_flux_pos(:, i))
+    text(max(t), max(li_flux_pos(:, i)), "Pos" + num2str(z_coordinates(i)));
+    hold on;
 end
-t_vector = 1 : size(li_flux_vector_neg, 1);
-plot(t_vector, li_flux_vector_neg)
-text(max(t_vector), min(li_flux_vector_neg), 'neg')
 grid on;
+
+[all_tf_j_neg, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
+A_estimates = [];
+B_estimates = [];
+C_estimates = [];
+D_estimates = [];
+for i = 1 : size(all_tf_j_neg, 2)
+    [A_est, B_est, C_est, D_est] = dra(all_tf_j_neg(:, i), res0, D, sampling_freq, T_len, const);
+    A_estimates = [A_estimates; A_est];
+    B_estimates = [B_estimates; B_est];
+    C_estimates = [C_estimates; C_est];
+    D_estimates = [D_estimates, D_est];
+end
+
+
+steps = 10000;
+li_flux_neg = zeros(steps, size(all_tf_j_neg, 2));
+X = zeros(size(A_estimates, 2), size(all_tf_j_neg, 2));
+for step = 1 : steps
+    for i = 1 : size(all_tf_j_neg, 2)
+        A = A_estimates(i * size(A_estimates, 2) - size(A_estimates, 2) + 1: i * size(A_estimates, 2), 1 : size(A_estimates, 2));
+        B = B_estimates(i * size(A_estimates, 2) - size(A_estimates, 2) + 1: i * size(A_estimates, 2), 1);
+        C = C_estimates(i, 1 : size(A_estimates, 2));
+        D = D_estimates(1, i);
+        X(:, i) = A * X(:, i) + B;
+        Y = C * X(:, i) + D;
+        li_flux_neg(step, i) = Y;
+    end
+end
+
+t = 1 : steps;
+subplot(2, 1, 2);
+for i = 1 : size(li_flux_neg, 2)
+    plot(t, li_flux_neg(:, i))
+    text(max(t), max(li_flux_neg(:, i)), "Neg" + num2str(z_coordinates(i)));
+    hold on;
+end
+grid on;
+
+
+
+
+
+
+% steps = 10000;
+% li_flux_vector_pos = zeros(steps, 1);
+% X_li_flux = zeros(size(A_est, 2), 1);
+% for current_step = 1 : steps
+%     X_li_flux = A_est * X_li_flux + B_est;
+%     Y_li_flux = C_est * X_li_flux + D_est;
+%     if current_step == 1
+%         li_flux_vector_pos(current_step, 1) = 0;
+%     else
+%         li_flux_vector_pos(current_step, 1) = li_flux_vector_pos(current_step - 1, 1) + Y_li_flux;
+%     end
+% end
+% t_vector = 1 : size(li_flux_vector_pos, 1);
+% plot(t_vector, li_flux_vector_pos)
+% hold on;
+% text(max(t_vector), min(li_flux_vector_pos), 'pos')
+% 
+% [tf_j_neg, res0, D, sampling_freq, T_len] = tf_j(cse_neg, z_coordinates, const, 'neg');
+% [A_est, B_est, C_est, D_est] = dra(tf_j_neg, res0, D, sampling_freq, T_len, const);
+% 
+% 
+% li_flux_vector_neg = zeros(steps, 1);
+% X_li_flux = zeros(size(A_est, 2), 1);
+% for current_step = 1 : steps
+%     X_li_flux = A_est * X_li_flux + B_est;
+%     Y_li_flux = C_est * X_li_flux + D_est;
+%     if current_step == 1
+%         li_flux_vector_neg(current_step, 1) = 0;
+%     else
+%         li_flux_vector_neg(current_step, 1) = li_flux_vector_neg(current_step - 1, 1) + Y_li_flux;
+%     end
+% end
+% t_vector = 1 : size(li_flux_vector_neg, 1);
+% plot(t_vector, li_flux_vector_neg)
+% text(max(t_vector), max(li_flux_vector_neg), 'neg')
+% grid on;
 
 
 
