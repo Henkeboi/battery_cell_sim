@@ -26,19 +26,19 @@ function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, cons
         eps = const.porosity_solid_neg;
         Uovc_d = calculate_ocv_derivative_neg(cse, const);
     elseif electrode == 'pos'
-        Rct = const.R_ct_neg;
-        Rfilm = const.R_film_neg;
+        Rct = const.R_ct_pos;
+        Rfilm = const.R_film_pos;
         Rse = Rct + Rfilm;
-        Rs = const.radius_neg;
-        L = const.L_neg;
+        Rs = const.radius_pos;
+        L = const.L_pos;
         F = const.F;
-        D = const.diffusivity_neg;
-        A = const.A_neg;
-        alpha = const.alpha_neg;
-        sigma = const.sigma_neg;
-        kappa = const.kappa_neg;
+        D = const.diffusivity_pos;
+        A = const.A_pos;
+        alpha = const.alpha_pos;
+        sigma = const.sigma_pos;
+        kappa = const.kappa_pos;
         beta = Rs * sqrt(s / D);
-        eps = const.porosity_solid_neg;
+        eps = const.porosity_solid_pos;
         Uovc_d = calculate_ocv_derivative_pos(cse, const);
     else
         error("Bad electrode selection");
@@ -68,7 +68,7 @@ function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, cons
     for i = 1 : size(z_coordinates, 2) 
         for j = 1 : size(s, 2)
             if isnan(tf_j(j, i)) && s(1, j) == 0
-               tf_j(j, i) = tf_j0;
+                tf_j(j, i) = tf_j0;
             else if isnan(tf_j(j, i))
                 tf_j(j, i) = 0;
             end
