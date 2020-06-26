@@ -50,7 +50,7 @@ function [tf_cse, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, co
     % Calcualte lithium concentration on the electrode surface TF.
     z = 0.5; % Temporary choosen z-location
     tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) .* (Rs * nu) ./ (alpha * F * L * A * D * (kappa + sigma) * sinh(nu) .* (1 - sqrt(beta) .* coth(beta)));
-    tf_cse0 = 0;
+    tf_cse0 = (kappa * Rs * (z - 1) + Rs * sigma) / (alpha * F * L * A * (kappa + sigma)); % Found using Maple.
     res0 = 0;
     D = 0;
     
