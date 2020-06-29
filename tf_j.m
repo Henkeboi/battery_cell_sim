@@ -69,8 +69,6 @@ function [tf_j, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, cons
         for j = 1 : size(s, 2)
             if isnan(tf_j(j, i)) && s(1, j) == 0
                 tf_j(j, i) = tf_j0;
-            else if isnan(tf_j(j, i))
-                tf_j(j, i) = 0;
             end
         end
     end

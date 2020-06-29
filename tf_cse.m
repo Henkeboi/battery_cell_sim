@@ -1,7 +1,7 @@
 function [tf_cse, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, const, electrode)
     sampling_f = 200;
     T = 1 / sampling_f;
-    T_len = 1;
+    T_len = 10;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));
@@ -48,15 +48,19 @@ function [tf_cse, res0, D, sampling_f, T_len] = phi_se_tf(cse, z_coordinates, co
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / D * (1 ./ (Rs * beta .* coth(beta))));
     
     % Calcualte lithium concentration on the electrode surface TF.
-    z = 0.5; % Temporary choosen z-location
-    tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) .* (Rs * nu) ./ (alpha * F * L * A * D * (kappa + sigma) * sinh(nu) .* (1 - sqrt(beta) .* coth(beta)));
+    z = 0.9; % Temporary choosen z-location
+
+    % Find res0 to remove zero pole.
+    res0 = 1 ./ (eps * A * F * L * s);
     tf_cse0 = (kappa * Rs * (z - 1) + Rs * sigma) / (alpha * F * L * A * (kappa + sigma)); % Found using Maple.
-    res0 = 0;
+    tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) .* (Rs * nu) ./ (alpha * F * L * A * D * (kappa + sigma) * sinh(nu) .* (1 - sqrt(beta) .* coth(beta)));
+    tf_cse = tf_cse + res0;
     D = 0;
     
     for i = 1 : size(s, 2)
         if isnan(tf_cse(1, i)) && s(1, i) == 0
             tf_cse(1, i) = tf_cse0;
+            res0(1, i) = tf_cse0;
         end
     end
 

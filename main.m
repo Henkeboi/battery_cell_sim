@@ -1,13 +1,22 @@
 clearvars;
 run('parameters.m');
 
-cse_pos = 10000;
-cse_neg = 10000;
+cse_pos = 1000;
+cse_neg = 1000;
 
 z_coordinates = [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0];
 [tf_cse, res0, D, sampling_freq, T_len] = tf_cse(cse_neg, z_coordinates, const, 'neg');
 [A_est, B_est, C_est, D_est] = dra(tf_cse, res0, D, sampling_freq, T_len, const);
 sys = ss(A_est, B_est, C_est, D_est, 0.1);
+
+X = zeros(size(A_est, 2), 1);
+U = 0.1;
+for i = 1 : 10
+    X = A_est * X + B_est * U;
+    Y = C_est * X + D_est * U;
+    disp(Y)
+end
+
 
 
 % z_coordinates = [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0];
@@ -24,6 +33,7 @@ sys = ss(A_est, B_est, C_est, D_est, 0.1);
 %     C_estimates = [C_estimates; C_est];
 %     D_estimates = [D_estimates, D_est];
 % end
+% 
 % 
 % 
 % steps = 10000;
@@ -86,7 +96,7 @@ sys = ss(A_est, B_est, C_est, D_est, 0.1);
 %     hold on;
 % end
 % grid on;
-
+% 
 
 
 
