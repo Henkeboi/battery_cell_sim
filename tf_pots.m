@@ -1,7 +1,8 @@
-function [tf_potse, res0, D, sampling_f, T_len] = tf_potse(cse, z_coordinates, const, electrode)
+% TODO: Add positive electrode and remove pole at 0.
+function [tf_pots, res0, D, sampling_f, T_len] = tf_pots(cse, z_coordinates, const, electrode)
     sampling_f = 200;
     T = 1 / sampling_f;
-    T_len = 5;
+    T_len = 4;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));
@@ -43,28 +44,27 @@ function [tf_potse, res0, D, sampling_f, T_len] = tf_potse(cse, z_coordinates, c
     else
         error("Bad electrode selection");
     end
-    z = 0.1; % z coordinate
 
     % Calculate nu
+    z = 0.01;
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-
-    % Calculate TF potential between solid and electrolyte
-    tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z -1))) ./ (A * sigma * kappa * nu .* sinh(nu));
-    tf0_potse = (L * z * z * (kappa + sigma) - 2 * L * z * kappa + L * kappa) / (2 * A * kappa * sigma) .* ones(1, size(s, 2)); % Found using maple.
-    tf_potse = tf_potse - Uovc_d ./ (eps * A * F * L * s);
-    if electrode == 'pos'
-        tf_potse = -tf_potse;
-    end
     res0 = 0;
     D = 0;
 
-    for i = 1 : size(s, 2)
-        if isnan(tf_potse(1, i)) && s(1, i) == 0
-            tf_potse(1, i) = tf0_potse(1, i);
+    % Calculate TF potential in solid.
+    tf_pots = -L * (kappa * (cosh(nu) - cosh(nu * (z - 1))) + sigma * (1 - cosh(z * nu) + z * nu .* sinh(nu))) ./ (A * sigma * (kappa + sigma) * sinh(nu));
+    tf_pots0 = 0; % TODO: Find this value.
+    for (i = 1 : size(tf_pots, 2))
+        if isnan(tf_pots(1, i)) && s(1, i) == 0
+            tf_pots(1, i) = tf_pots0;
         end
     end
 
-    if any(isnan(tf_potse))
-        error("NAN in tf_potse");
+    if electrode == 'pos'
+        tf_pots = -tf_pots;
+    end
+
+    if any(isnan(tf_pots))
+        error("NAN in tf_j");
     end
 end
