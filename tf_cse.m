@@ -54,7 +54,6 @@ function [tf_cse, res0, D, sampling_f, T_len] = tf_cse(cse, z_coordinates, const
     % tf_cse0 = (kappa * Rs * (z - 1) + Rs * sigma) / (alpha * F * L * A * (kappa + sigma)); % Found using Maple.
 
 
-
     cse_j = Rs/Ds./(1-beta.*coth(beta));
     res0 = -3/(A*alpha*F*L*Rs);
     tf_cse0 = (-6*Uocv_d*Rs*kappa*sigma +5*alpha*Ds*F*L^2*((2-6*z+3*z.^2)*kappa +(3*z.^2-1)*sigma))./ (30*A*alpha*Ds*Uocv_d*F*L*kappa*sigma);

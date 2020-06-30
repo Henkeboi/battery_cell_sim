@@ -1,18 +1,34 @@
 clearvars;
 run('parameters.m');
 
-cse_pos = 10000;
-cse_neg = 20000;
 
 z_coordinates = [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0];
+cs0_neg = const.solid_max_c_neg;
+[tf_cse, res0, D, sampling_freq, T_len] = tf_cse(cs0_neg, z_coordinates, const, 'neg');
+[A_est, B_est, C_est, D_est, Ts] = dra(tf_cse, res0, D, sampling_freq, T_len, const);
+[A, B, C, D, integrator_index] = multi_dra(A_est, B_est, C_est, D_est, Ts, res0);
 
-params.j_neg = 1e-6;
-params.j_pos = 1e-6;
-params.cse_neg = 1e5;
-params.cse_pos = 1e4;
-params.pote1 = 1e-10;
-params.pote2 = 1e-8;
-calculate_voltage(params, const);
+U = 10;
+X = zeros(size(A, 1), 1);
+% A = [zeros(size(A, 2) - 1, size(A, 1) -1) [0; 0; 0]; 0 0 0 1];
+for i = 1 : (60 * 60 * 1 / Ts)
+    X = A * X + B * U;
+    SOC_neg = (cs0_neg - X(integrator_index) / (const.porosity_solid_neg * const.A_neg * const.F * const.L_neg)) / const.solid_max_c_neg;
+    disp(SOC_neg)
+end
+
+
+
+% params.j_neg = 1e-6;
+% params.j_pos = 1e-6;
+% params.cse_neg = 1e5;
+% params.cse_pos = 1e4;
+% params.pote1 = 1e-10;
+% params.pote2 = 1e-10;
+% calculate_voltage(params, const);
+
+
+
 
 
 % [tf_pots, res0, D, sampling_freq, T_len] = tf_pots(cse_neg, z_coordinates, const, 'neg');
