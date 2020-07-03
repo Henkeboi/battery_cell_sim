@@ -1,3 +1,4 @@
+% Cell parameters
 const.R = 8.31446261815324;
 const.F = 96485.3329;
 const.L_neg = 128e-6;
@@ -42,7 +43,6 @@ const.ionic_conductivity_pos = 2.16e-11;
 const.temp = 25;
 const.j0_neg = const.reaction_rate_neg * const.initial_electrolyte_concentration_neg ^ (1 - const.alpha_neg) * (const.solid_max_c_neg - const.initial_electrolyte_concentration_neg) ^ (1 - const.alpha_neg) * const.initial_electrolyte_concentration_neg ^ const.alpha_neg; 
 const.j0_pos = const.reaction_rate_pos * const.initial_electrolyte_concentration_pos ^ (1 - const.alpha_pos) * (const.solid_max_c_pos - const.initial_electrolyte_concentration_pos) ^ (1 - const.alpha_pos) * const.initial_electrolyte_concentration_pos ^ const.alpha_pos; 
-
 const.R_film_neg = 0.0;
 const.R_film_pos = 0.0;
 const.R_ct_neg = const.R * const.temp / (const.j0_neg * const.F ^ 2);
@@ -52,6 +52,13 @@ const.R_solid_electrolyte_pos = const.R_film_pos + const.R_ct_pos;
 const.R_neg = 12.5e-6;
 const.R_pos = 8.5e-6;
 
+% Simulation parameters
+const.step_size = 0.1;
+
+
 % Temporary params
 debiased_potential_neg = 0; % Init to 0
 initial_potential_pos = 3.8; % TODO: Should be voltage from
+
+
+

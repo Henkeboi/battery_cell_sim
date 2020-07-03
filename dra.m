@@ -7,7 +7,7 @@ function [A_est, B_est, C_est, D_est, T_shifted] = dra(transfer_function, res0, 
     h_step = T * cumsum(tf_c); 
     td = T * (0 : num_samples - 1);
 
-    T_shifted = 0.01;
+    T_shifted = .5;
     time_vector = 0 : T_shifted : T_len;
 
     h_pulse = [0 diff(interp1(td, h_step, time_vector))];

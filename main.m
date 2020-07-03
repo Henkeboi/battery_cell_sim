@@ -1,21 +1,27 @@
 clearvars;
 run('parameters.m');
-
+run('read_load_cycle.m')
 
 z_coordinates = [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0];
-cs0_neg = const.solid_max_c_neg;
+x100 = 0.8;
+x0 = 0.2;
+cs0_neg = const.solid_max_c_neg * x100;
 [tf_cse, res0, D, sampling_freq, T_len] = tf_cse(cs0_neg, z_coordinates, const, 'neg');
 [A_est, B_est, C_est, D_est, Ts] = dra(tf_cse, res0, D, sampling_freq, T_len, const);
 [A, B, C, D, integrator_index] = multi_dra(A_est, B_est, C_est, D_est, Ts, res0);
 
-U = 10;
 X = zeros(size(A, 1), 1);
-% A = [zeros(size(A, 2) - 1, size(A, 1) -1) [0; 0; 0]; 0 0 0 1];
-for i = 1 : (60 * 60 * 1 / Ts)
+for i = 1 : size(load_cycle, 1)
+    delta_time = load_cycle(i, 1);
+    current = load_cycle(i, 2);
+    P = 2;
+    U = current * delta_time / Ts / P;
     X = A * X + B * U;
-    SOC_neg = (cs0_neg - X(integrator_index) / (const.porosity_solid_neg * const.A_neg * const.F * const.L_neg)) / const.solid_max_c_neg;
-    disp(SOC_neg)
+    cs_avg_neg = cs0_neg - X(integrator_index) / (const.porosity_solid_neg * const.A_neg * const.F * const.L_neg);
+    z = (cs_avg_neg / const.solid_max_c_neg - x0) / (x100 - x0);
+    disp(z)
 end
+
 
 
 
