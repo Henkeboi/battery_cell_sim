@@ -1,37 +1,34 @@
 clearvars;
+disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
-z_coordinates = [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0];
-x100 = 0.8;
-x0 = 0.2;
-cs0_neg = const.solid_max_c_neg * x100;
-[tf_cse, res0, D, sampling_freq, T_len] = tf_cse(cs0_neg, z_coordinates, const, 'neg');
-[A_est, B_est, C_est, D_est, Ts] = dra(tf_cse, res0, D, sampling_freq, T_len, const);
-[A, B, C, D, integrator_index] = multi_dra(A_est, B_est, C_est, D_est, Ts, res0);
+disp("Running dra.")
+cse_blender = Blender(0.01, @tf_cse, [0]);
+[all_A, all_B, all_C, all_D, integrator_index, Ts] = cse_blender.create_cs_models('neg', const);
+[A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, 1);
 
+disp("Simulating.")
+cs_neg = const.solid_max_c_neg * const.x100;
 X = zeros(size(A, 1), 1);
+z = zeros(size(load_cycle, 1), 1);
+time = zeros(size(load_cycle, 1), 1);
+time_acc = 0;
 for i = 1 : size(load_cycle, 1)
     delta_time = load_cycle(i, 1);
     current = load_cycle(i, 2);
     P = 2;
     U = current * delta_time / Ts / P;
     X = A * X + B * U;
-    cs_avg_neg = cs0_neg - X(integrator_index) / (const.porosity_solid_neg * const.A_neg * const.F * const.L_neg);
-    z = (cs_avg_neg / const.solid_max_c_neg - x0) / (x100 - x0);
-    disp(z)
+    cs_avg_neg = cs_neg - X(integrator_index) / (const.porosity_solid_neg * const.A_neg * const.F * const.L_neg);
+    z(i) = (cs_avg_neg / const.solid_max_c_neg - const.x0) / (const.x100 - const.x0); % Calculate SOC from average concentration
+    time(i) = time_acc;
+    time_acc = time(i) + delta_time;
+    [A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, z(i));
 end
+plot(time, z)
 
 
-
-
-% params.j_neg = 1e-6;
-% params.j_pos = 1e-6;
-% params.cse_neg = 1e5;
-% params.cse_pos = 1e4;
-% params.pote1 = 1e-10;
-% params.pote2 = 1e-10;
-% calculate_voltage(params, const);
 
 
 
