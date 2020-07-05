@@ -15,11 +15,18 @@ j_blender = Blender(0.1, @tf_cse, [0]);
 [all_j_A, all_j_B, all_j_C, all_j_D, j_integrator_index, Ts] = j_blender.create_models('neg', const);
 [j_A, j_B, j_C, j_D] = j_blender.blend_model(all_j_A, all_j_B, all_j_C, all_j_D, calculate_SOC(cs0, 0, 'neg', const));
 
+disp("Running pots dra.")
+pots_blender = Blender(0.1, @tf_pots, [0]);
+[all_pots_A, all_pots_B, all_pots_C, all_pots_D, pots_integrator_index, Ts] = pots_blender.create_models('neg', const);
+[pots_A, pots_B, pots_C, pots_D] = pots_blender.blend_model(all_pots_A, all_pots_B, all_pots_C, all_pots_D, calculate_SOC(cs0, 0, 'neg', const));
+
 disp("Simulating.")
 cse_X = zeros(size(cse_A, 1), 1);
 j_X = zeros(size(j_A, 1), 1);
+pots_X = zeros(size(pots_A, 1), 1);
 z = zeros(size(load_cycle, 1), 1);
 j = zeros(size(load_cycle, 1), 1);
+pots = zeros(size(load_cycle, 1), 1);
 time = zeros(size(load_cycle, 1), 1);
 time_acc = 0;
 for i = 1 : size(load_cycle, 1)
@@ -37,6 +44,10 @@ for i = 1 : size(load_cycle, 1)
     j_X = j_A * j_X + j_B * U;
     j(i) = j_X(j_integrator_index);
 
+    % Find pots
+    pots_X = pots_A * pots_X + pots_C * U;
+    pots(i) = pots_X(pots_integrator_index);
+
     % Find next step state space.
     [cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, z(i));
     time(i) = time_acc;
@@ -47,12 +58,18 @@ plot(time, z);
 title("SOC")
 xlabel("Time")
 ylabel("SOC")
+
 f2 = figure;
 plot(time, j);
 title("Li flux at z = 0")
 xlabel("Time")
 ylabel("Li flux")
 
+f3 = figure;
+plot(time, pots);
+title("Solid potential at z = 0")
+xlabel("Time")
+ylabel("Solid potential")
 
 
 

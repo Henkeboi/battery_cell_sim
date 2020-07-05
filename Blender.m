@@ -43,8 +43,8 @@ classdef Blender < handle
             D_estimates = [];
             z = (cs / max_c - x0) / (x100 - x0);
             while z >= 0
-                [tf_cse, res0, D, sampling_freq, T_len] = obj.transfer_function(cs, obj.z_coordinates, const, 'neg');
-                [A, B, C, D, Ts] = dra(tf_cse, res0, D, sampling_freq, T_len, const);
+                [tf, res0, D, sampling_freq, T_len] = obj.transfer_function(cs, obj.z_coordinates, const, 'neg');
+                [A, B, C, D, Ts] = dra(tf, res0, D, sampling_freq, T_len, const);
                 [A, B, C, D, integrator_index] = multi_dra(A, B, C, D, Ts, res0);
                 cs = c_step(obj, cs, max_c, x0, x100);
                 z = z - obj.SOC_spacing;
