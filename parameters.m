@@ -25,7 +25,7 @@ const.kappa_pos = const.reaction_rate_pos * (const.porosity_electrolyte_pos ^ co
 const.sigma_neg = const.resistivity_neg * (const.porosity_solid_neg ^ const.brug_neg);
 const.sigma_pos = const.resistivity_pos * (const.porosity_solid_pos ^ const.brug_pos);
 const.solid_max_c_neg = 6550; %26390;
-const.solid_max_c_pos = 22860;
+const.solid_max_c_pos = 6550; %22860;
 const.initial_electrolyte_concentration_neg = 4000;
 const.initial_electrolyte_concentration_sep = 2000;
 const.initial_electrolyte_concentration_pos = 2000;
@@ -51,8 +51,11 @@ const.R_solid_electrolyte_neg = const.R_film_neg + const.R_ct_neg;
 const.R_solid_electrolyte_pos = const.R_film_pos + const.R_ct_pos;
 const.R_neg = 12.5e-6;
 const.R_pos = 8.5e-6;
-const.x100 = 0.8;
-const.x0 = 0.2;
+const.x100_neg = 0.8;
+const.x100_pos = 0.8;
+const.x0_neg = 0.2;
+const.x0_pos = 0.2;
+
 
 % Simulation parameters
 const.step_size = 0.1;

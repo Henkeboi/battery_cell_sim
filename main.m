@@ -5,11 +5,12 @@ run('read_load_cycle.m')
 
 disp("Running dra.")
 cse_blender = Blender(0.01, @tf_cse, [0]);
-[all_A, all_B, all_C, all_D, integrator_index, Ts] = cse_blender.create_cs_models('neg', const);
+[all_A, all_B, all_C, all_D, integrator_index, Ts] = cse_blender.create_cs_models('pos', const);
 [A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, 1);
 
 disp("Simulating.")
-cs_neg = const.solid_max_c_neg * const.x100;
+cs = const.solid_max_c_pos * const.x100_pos;
+
 X = zeros(size(A, 1), 1);
 z = zeros(size(load_cycle, 1), 1);
 time = zeros(size(load_cycle, 1), 1);
@@ -20,16 +21,12 @@ for i = 1 : size(load_cycle, 1)
     P = 2;
     U = current * delta_time / Ts / P;
     X = A * X + B * U;
-    cs_avg_neg = cs_neg - X(integrator_index) / (const.porosity_solid_neg * const.A_neg * const.F * const.L_neg);
-    z(i) = (cs_avg_neg / const.solid_max_c_neg - const.x0) / (const.x100 - const.x0); % Calculate SOC from average concentration
+    z(i) = calculate_SOC(cs, X(integrator_index), 'pos', const);
+    [A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, z(i));
     time(i) = time_acc;
     time_acc = time(i) + delta_time;
-    [A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, z(i));
 end
 plot(time, z)
-
-
-
 
 
 

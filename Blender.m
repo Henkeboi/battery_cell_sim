@@ -17,26 +17,36 @@ classdef Blender < handle
             end
         end
 
-        function [next_cs] = c_step(obj, current_cs, electode, const)
-            z = (current_cs / const.solid_max_c_neg - const.x0) / (const.x100 - const.x0) - obj.SOC_spacing;
-            next_cs = ((z * (const.x100 - const.x0)) + const.x0) * const.solid_max_c_neg;
+        function [next_cs] = c_step(obj, current_cs, max_c, x0, x100)
+            next_z = (current_cs / max_c - x0) / (x100 - x0) - obj.SOC_spacing;
+            next_cs = ((next_z * (x100 - x0)) + x0) * max_c;
         end
 
         function [A_estimates, B_estimates, C_estimates, D_estimates, integrator_index, Ts] = create_cs_models(obj, electrode, const)
             if electrode == 'neg'
-                cs = const.solid_max_c_neg * const.x100;
+                max_c = const.solid_max_c_neg;
+                x100 = const.x100_neg;
+                x0 = const.x0_neg;
+                cs = max_c * x100;
+            elseif electrode == 'pos'
+                max_c = const.solid_max_c_pos;
+                x100 = const.x100_pos;
+                x0 = const.x0_pos;
+                cs = max_c * x100;
+            else
+                error("Bad electrode selection");
             end
 
             A_estimates = [];
             B_estimates = [];
             C_estimates = [];
             D_estimates = [];
-            z = (cs / const.solid_max_c_neg - const.x0) / (const.x100 - const.x0);
+            z = (cs / max_c - x0) / (x100 - x0);
             while z >= 0
                 [tf_cse, res0, D, sampling_freq, T_len] = obj.transfer_function(cs, obj.z_coordinates, const, 'neg');
                 [A, B, C, D, Ts] = dra(tf_cse, res0, D, sampling_freq, T_len, const);
                 [A, B, C, D, integrator_index] = multi_dra(A, B, C, D, Ts, res0);
-                cs = c_step(obj, cs, electrode, const);
+                cs = c_step(obj, cs, max_c, x0, x100);
                 z = z - obj.SOC_spacing;
                 A_estimates = [A_estimates A];
                 B_estimates = [B_estimates B];
@@ -47,23 +57,14 @@ classdef Blender < handle
         end
 
         function [A_blended, B_blended, C_blended, D_blended] = blend_model(obj, A, B, C, D, SOC)
-            [~, index] = min(abs(obj.SOC_lut - SOC));
+            [~, index] = min(abs(SOC - obj.SOC_lut));
             if obj.SOC_lut(index) >= SOC
                 SOC1 = index;
-                if index < size(obj.SOC_lut, 2)
-                    SOC0 = index + 1;
-                else
-                    SOC0 = index;
-                end
+                SOC0 = index + 1;
             elseif obj.SOC_lut(index) < SOC
+                SOC1 = index + 1;
                 SOC0 = index;
-                if SOC0 > 1
-                    SOC1 = index - 1;
-                else
-                    SOC1 = index; 
-                end
             end
-
             phi = (SOC - SOC0) / (SOC1 - SOC0);
             A0 = A(1 : obj.state_space_size, obj.state_space_size * SOC0 - obj.state_space_size + 1: SOC0 * obj.state_space_size);
             A1 = A(1 : obj.state_space_size, obj.state_space_size * SOC1 - obj.state_space_size + 1: SOC1 * obj.state_space_size);
