@@ -1,4 +1,5 @@
 function SOC = calculate_SOC(cs, integrator_state, electrode, const)
+    % Calculates SOC by subtracting lithium flux out of the particles from initial concentration. 
     F = const.F;
     if electrode == 'neg'
         eps = const.porosity_solid_neg;

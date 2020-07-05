@@ -1,5 +1,5 @@
 function [tf_j, res0, D, sampling_f, T_len] = tf_j(cse, z_coordinates, const, electrode)
-    sampling_f = 200;
+    sampling_f = 1000;
     T = 1 / sampling_f;
     T_len = 10;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));

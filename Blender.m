@@ -22,7 +22,7 @@ classdef Blender < handle
             next_cs = ((next_z * (x100 - x0)) + x0) * max_c;
         end
 
-        function [A_estimates, B_estimates, C_estimates, D_estimates, integrator_index, Ts] = create_cs_models(obj, electrode, const)
+        function [A_estimates, B_estimates, C_estimates, D_estimates, integrator_index, Ts] = create_models(obj, electrode, const)
             if electrode == 'neg'
                 max_c = const.solid_max_c_neg;
                 x100 = const.x100_neg;

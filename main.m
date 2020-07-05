@@ -3,30 +3,69 @@ disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
-disp("Running dra.")
-cse_blender = Blender(0.01, @tf_cse, [0]);
-[all_A, all_B, all_C, all_D, integrator_index, Ts] = cse_blender.create_cs_models('pos', const);
-[A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, 1);
+%% Calculations for the negative eletrode at z = 0.
+cs0 = const.solid_max_c_neg * const.x100_neg;
+disp("Running Lithium surface concentratoin dra.")
+cse_blender = Blender(0.1, @tf_cse, [0]);
+[all_cse_A, all_cse_B, all_cse_C, all_cse_D, cse_integrator_index, Ts] = cse_blender.create_models('neg', const);
+[cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, calculate_SOC(cs0, 0, 'neg', const));
+
+disp("Running li flux dra.")
+j_blender = Blender(0.1, @tf_cse, [0]);
+[all_j_A, all_j_B, all_j_C, all_j_D, j_integrator_index, Ts] = j_blender.create_models('neg', const);
+[j_A, j_B, j_C, j_D] = j_blender.blend_model(all_j_A, all_j_B, all_j_C, all_j_D, calculate_SOC(cs0, 0, 'neg', const));
 
 disp("Simulating.")
-cs = const.solid_max_c_pos * const.x100_pos;
-
-X = zeros(size(A, 1), 1);
+cse_X = zeros(size(cse_A, 1), 1);
+j_X = zeros(size(j_A, 1), 1);
 z = zeros(size(load_cycle, 1), 1);
+j = zeros(size(load_cycle, 1), 1);
 time = zeros(size(load_cycle, 1), 1);
 time_acc = 0;
 for i = 1 : size(load_cycle, 1)
+    % Find U.
     delta_time = load_cycle(i, 1);
     current = load_cycle(i, 2);
     P = 2;
     U = current * delta_time / Ts / P;
-    X = A * X + B * U;
-    z(i) = calculate_SOC(cs, X(integrator_index), 'pos', const);
-    [A, B, C, D] = cse_blender.blend_model(all_A, all_B, all_C, all_D, z(i));
+    
+    % Find SOC.
+    cse_X = cse_A * cse_X + cse_B * U;
+    z(i) = calculate_SOC(cs0, cse_X(cse_integrator_index), 'neg', const); 
+
+    % Find li flux
+    j_X = j_A * j_X + j_B * U;
+    j(i) = j_X(j_integrator_index);
+
+    % Find next step state space.
+    [cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, z(i));
     time(i) = time_acc;
     time_acc = time(i) + delta_time;
 end
-plot(time, z)
+f1 = figure;
+plot(time, z);
+title("SOC")
+xlabel("Time")
+ylabel("SOC")
+f2 = figure;
+plot(time, j);
+title("Li flux at z = 0")
+xlabel("Time")
+ylabel("Li flux")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
