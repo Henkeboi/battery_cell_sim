@@ -3,79 +3,106 @@ disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
+locs = [2e-4];
+a = tf_ce(locs, const, 0.5, 0.3, 0.1, .01, @calculate_ocv_derivative_neg, @calculate_ocv_derivative_pos)
+
+
 %% Calculations for the negative eletrode at z = 0.
-cs0 = const.solid_max_c_neg * const.x100_neg;
-disp("Running Lithium surface concentratoin dra.")
-cse_blender = Blender(0.1, @tf_cse, [0]);
-[all_cse_A, all_cse_B, all_cse_C, all_cse_D, cse_integrator_index, Ts] = cse_blender.create_models('neg', const);
-[cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, calculate_SOC(cs0, 0, 'neg', const));
-
-disp("Running li flux dra.")
-j_blender = Blender(0.1, @tf_cse, [0]);
-[all_j_A, all_j_B, all_j_C, all_j_D, j_integrator_index, Ts] = j_blender.create_models('neg', const);
-[j_A, j_B, j_C, j_D] = j_blender.blend_model(all_j_A, all_j_B, all_j_C, all_j_D, calculate_SOC(cs0, 0, 'neg', const));
-
-disp("Running pots dra.")
-pots_blender = Blender(0.1, @tf_pots, [0]);
-[all_pots_A, all_pots_B, all_pots_C, all_pots_D, pots_integrator_index, Ts] = pots_blender.create_models('neg', const);
-[pots_A, pots_B, pots_C, pots_D] = pots_blender.blend_model(all_pots_A, all_pots_B, all_pots_C, all_pots_D, calculate_SOC(cs0, 0, 'neg', const));
-
-disp("Simulating.")
-cse_X = zeros(size(cse_A, 1), 1);
-j_X = zeros(size(j_A, 1), 1);
-pots_X = zeros(size(pots_A, 1), 1);
-z = zeros(size(load_cycle, 1), 1);
-j = zeros(size(load_cycle, 1), 1);
-pots = zeros(size(load_cycle, 1), 1);
-time = zeros(size(load_cycle, 1), 1);
-time_acc = 0;
-for i = 1 : size(load_cycle, 1)
-    % Find U.
-    delta_time = load_cycle(i, 1);
-    current = load_cycle(i, 2);
-    P = 2;
-    U = current * delta_time / Ts / P;
-    
-    % Find SOC.
-    cse_X = cse_A * cse_X + cse_B * U;
-    z(i) = calculate_SOC(cs0, cse_X(cse_integrator_index), 'neg', const); 
-
-    % Find li flux
-    j_X = j_A * j_X + j_B * U;
-    j(i) = j_X(j_integrator_index);
-
-    % Find pots
-    pots_X = pots_A * pots_X + pots_C * U;
-    pots(i) = pots_X(pots_integrator_index);
-
-    % Find next step state space.
-    [cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, z(i));
-    time(i) = time_acc;
-    time_acc = time(i) + delta_time;
-end
-f1 = figure;
-plot(time, z);
-title("SOC")
-xlabel("Time")
-ylabel("SOC")
-
-f2 = figure;
-plot(time, j);
-title("Li flux at z = 0")
-xlabel("Time")
-ylabel("Li flux")
-
-f3 = figure;
-plot(time, pots);
-title("Solid potential at z = 0")
-xlabel("Time")
-ylabel("Solid potential")
-
-
-
-
-
-
+% cs0 = const.solid_max_c_neg * const.x100_neg;
+% disp("Running Lithium surface concentratoin dra.")
+% cse_blender = Blender(0.1, @tf_cse, [0]);
+% [all_cse_A, all_cse_B, all_cse_C, all_cse_D, cse_integrator_index, Ts] = cse_blender.create_models('neg', const);
+% [cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, calculate_SOC(cs0, 0, 'neg', const));
+% 
+% disp("Running li flux dra.")
+% j_blender = Blender(0.1, @tf_cse, [0]);
+% [all_j_A, all_j_B, all_j_C, all_j_D, j_integrator_index, Ts] = j_blender.create_models('neg', const);
+% [j_A, j_B, j_C, j_D] = j_blender.blend_model(all_j_A, all_j_B, all_j_C, all_j_D, calculate_SOC(cs0, 0, 'neg', const));
+% 
+% disp("Running pots dra.")
+% pots_blender = Blender(0.1, @tf_pots, [0]);
+% [all_pots_A, all_pots_B, all_pots_C, all_pots_D, pots_integrator_index, Ts] = pots_blender.create_models('neg', const);
+% [pots_A, pots_B, pots_C, pots_D] = pots_blender.blend_model(all_pots_A, all_pots_B, all_pots_C, all_pots_D, calculate_SOC(cs0, 0, 'neg', const));
+% 
+% disp("Running potse dra.")
+% potse_blender = Blender(0.1, @tf_potse, [0]);
+% [all_potse_A, all_potse_B, all_potse_C, all_potse_D, potse_integrator_index, Ts] = potse_blender.create_models('neg', const);
+% [potse_A, potse_B, potse_C, potse_D] = pots_blender.blend_model(all_potse_A, all_potse_B, all_potse_C, all_potse_D, calculate_SOC(cs0, 0, 'neg', const));
+% 
+% 
+% disp("Simulating.")
+% cse_X = zeros(size(cse_A, 1), 1);
+% j_X = zeros(size(j_A, 1), 1);
+% pots_X = zeros(size(pots_A, 1), 1);
+% potse_X = zeros(size(potse_A, 1), 1);
+% z = zeros(size(load_cycle, 1), 1);
+% j = zeros(size(load_cycle, 1), 1);
+% pots = zeros(size(load_cycle, 1), 1);
+% potse = zeros(size(load_cycle, 1), 1);
+% time = zeros(size(load_cycle, 1), 1);
+% time_acc = 0;
+% 
+% for i = 1 : size(load_cycle, 1)
+%     % Find U.
+%     delta_time = load_cycle(i, 1);
+%     current = load_cycle(i, 2);
+%     P = 2;
+%     U = current * delta_time / Ts / P;
+%     
+%     % Find SOC.
+%     cse_X = cse_A * cse_X + cse_B * U;
+%     z(i) = calculate_SOC(cs0, cse_X(cse_integrator_index), 'neg', const); 
+% 
+%     % Find li flux
+%     j_X = j_A * j_X + j_B * U;
+%     j(i) = j_X(j_integrator_index);
+% 
+%     % Find pots
+%     pots_X = pots_A * pots_X + pots_C * U;
+%     pots(i) = pots_X(pots_integrator_index);
+% 
+%     % Find potse
+%     potse_X = potse_A * potse_X + potse_C * U;
+%     potse(i) = potse_X(potse_integrator_index);
+% 
+%     % Find voltage
+%     % disp(cs0 - cse_X(cse_integrator_index) / const.porosity_solid_neg / const.A_neg / const.L_neg / const.F)
+%     % param.cse_neg = Y_cse;
+%     % v = calculate_voltage(param, const);
+% 
+%     % Find next step state space.
+%     [cse_A, cse_B, cse_C, cse_D] = cse_blender.blend_model(all_cse_A, all_cse_B, all_cse_C, all_cse_D, z(i));
+%     [j_A, j_B, j_C, j_D] = j_blender.blend_model(all_j_A, all_j_B, all_j_C, all_j_D, z(i));
+%     [pots_A, pots_B, pots_C, pots_D] = pots_blender.blend_model(all_pots_A, all_pots_B, all_pots_C, all_pots_D, z(i));
+%     [potse_A, potse_B, potse_C, potse_D] = potse_blender.blend_model(all_potse_A, all_potse_B, all_potse_C, all_potse_D, z(i));
+% 
+%     time(i) = time_acc;
+%     time_acc = time(i) + delta_time;
+% end
+% 
+% f1 = figure;
+% plot(time, z);
+% title("SOC")
+% xlabel("Time")
+% ylabel("SOC")
+% 
+% f2 = figure;
+% plot(time, j);
+% title("Li flux at z = 0")
+% xlabel("Time")
+% ylabel("Li flux")
+% 
+% f3 = figure;
+% plot(time, pots);
+% title("Solid potential at z = 0")
+% xlabel("Time")
+% ylabel("Solid potential")
+% 
+% f4 = figure;
+% plot(time, potse);
+% title("Solid electrolyte potential at z = 0")
+% xlabel("Time")
+% ylabel("Solid potential")
 
 
 
