@@ -61,20 +61,8 @@ classdef Blender < handle
         end
 
         function [A_blended, B_blended, C_blended, D_blended, Ts] = blend_model(obj, SOC)
-            [~, index] = min(abs(SOC - obj.SOC_lut));
-            if index == 1
-                SOC1 = index;
-                SOC0 = index + 1;
-            elseif index == size(obj.SOC_lut, 2)
-                SOC1 = index - 1;
-                SOC0 = index;
-            elseif obj.SOC_lut(index) > SOC
-                SOC1 = index;
-                SOC0 = index + 1;
-            else
-                SOC1 = index - 1;
-                SOC0 = index;
-            end
+            [~, SOC1] = min(abs(SOC - obj.SOC_lut));
+            [~, SOC0] = min(abs(SOC - obj.SOC_spacing - obj.SOC_lut));
             if isnan(SOC)
                 error("Input is NAN")
             end
@@ -106,13 +94,14 @@ classdef Blender < handle
             A = obj.A_estimates(1 : obj.integrator_index, obj.integrator_index * index - obj.integrator_index + 1 : index * obj.integrator_index);
             B = obj.B_estimates(1 : obj.integrator_index, index);
             C = obj.C_estimates(1, obj.integrator_index * index - obj.integrator_index + 1 : index * obj.integrator_index);
+            % return; % TODO: Make this work: Forgot to convert X :(
 
             [T, D] = eig(A);
             A = inv(T) * A * T;
             B = inv(T) * B;
             C = C * T;
             T = diag(B);
-            B = ones(size(B, 1), size(B, 2));
+            B = inv(T) * B;
             C = C * T;
 
             obj.A_estimates(1 : obj.integrator_index, obj.integrator_index * index - obj.integrator_index + 1 : index * obj.integrator_index) = A;

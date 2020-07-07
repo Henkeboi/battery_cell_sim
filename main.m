@@ -16,8 +16,8 @@ disp("Running blended Lithium surface concentration dra.")
 % [cse_neg_A, cse_neg_B, cse_neg_C, cse_neg_D, cse_neg_Ts] = cse_neg_blender.blend_model(calculate_SOC(cs0_neg, 0, 'neg', const));
 
 cse_pos_sampling_f = 400;
-cse_pos_T_len = 5;
-cse_pos_blender = Blender(0.2, @tf_cse, [0], const);
+cse_pos_T_len = 3;
+cse_pos_blender = Blender(0.01, @tf_cse, [0], const);
 cse_pos_integrator_index = cse_pos_blender.create_models(cse_pos_T_len, cse_pos_sampling_f, 'pos');
 cse_pos_blender.sort();
 [cse_pos_A, cse_pos_B, cse_pos_C, cse_pos_D, cse_pos_Ts] = cse_pos_blender.blend_model(calculate_SOC(cs0_pos, 0, 'pos', const));
@@ -106,7 +106,7 @@ for i = 1 : size(load_cycle, 1)
 
     % Find next step state space.
     %[cse_neg_A, cse_neg_B, cse_neg_C, cse_neg_D] = cse_neg_blender.blend_model(z_neg(i));
-    % [cse_pos_A, cse_pos_B, cse_pos_C, cse_pos_D] = cse_pos_blender.blend_model(z_pos(i));
+    [cse_pos_A, cse_pos_B, cse_pos_C, cse_pos_D] = cse_pos_blender.blend_model(z_pos(i));
 
     % [j_A, j_B, j_C, j_D] = j_neg_blender.blend_model(min(z_neg(i), z_pos(i)));
     % [pots_A, pots_B, pots_C, pots_D] = pots_blender.blend_model(all_pots_A, all_pots_B, all_pots_C, all_pots_D, z(i));
