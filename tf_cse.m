@@ -1,7 +1,5 @@
-function [tf_cse, res0, D, sampling_f, T_len] = tf_cse(cse, z_coordinates, const, electrode)
-    sampling_f = 4000;
+function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
-    T_len = 100;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));
@@ -60,8 +58,6 @@ function [tf_cse, res0, D, sampling_f, T_len] = tf_cse(cse, z_coordinates, const
     tf_cse = nu./(alpha*F*L*A*(kappa+sigma).*sinh(nu)).*(sigma*cosh(nu.*z) + kappa*cosh(nu.*(z-1)));
     tf_cse = tf_cse.*cse_j;    % Convert tf_j to tf_cse
     tf_cse = tf_cse - res0./s; % Remove pole at origin
-
-
 
     % tf_cse = tf_cse + res0 ./ s;
     for i = 1 : size(tf_cse, 2)

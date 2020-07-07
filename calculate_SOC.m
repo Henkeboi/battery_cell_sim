@@ -13,11 +13,15 @@ function SOC = calculate_SOC(cs, integrator_state, electrode, const)
         A = const.A_pos;
         L = const.L_pos;
         max_c = const.solid_max_c_pos;
-        x100 = const.x100_pos;
         x0 = const.x0_pos;
+        x100 = const.x100_pos;
     else
         error("Bad electrode selection")
     end
     cs_avg = cs - integrator_state / (eps * A * F * L); % Calculate average electrode concentration.
-    SOC = (cs_avg / max_c - x0) / (x100 - x0); % Calculate SOC from average concentration.
+    if electrode == 'neg'
+        SOC = (cs_avg / max_c - x0) / (x100 - x0); % Calculate SOC from average concentration.
+    else
+        SOC = 1 + (cs_avg / max_c - x0) / (x100 - x0); % Calculate SOC from average concentration.
+    end
 end

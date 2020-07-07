@@ -8,11 +8,11 @@
 % This file is provided as a supplement to: Plett, Gregory L., "Battery
 % Management Systems, Volume I, Battery Modeling," Artech House, 2015.
 
-function [ce_tf, Dterm, res0] = tf_ce(locs, const, SOC_neg, SOC_pos, cse_neg, cse_pos, calculate_ocv_derivative_neg, calculate_ocv_derivative_pos)
-    M = 1;
-    sampling_f = 200;
+function [tf_ce, res0, D, sampling_f, T_len] = tf_ce(SOC_neg, SOC_pos, cse_neg, cse_pos, calculate_ocv_derivative_neg, calculate_ocv_derivative_pos, locs, const)
+    M = 10; % Must be at least as big as the statespace.
+    sampling_f = 1000;
     T = 1 / sampling_f;
-    T_len = 1;
+    T_len = 10;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));
@@ -103,9 +103,7 @@ function [ce_tf, Dterm, res0] = tf_ce(locs, const, SOC_neg, SOC_pos, cse_neg, cs
                      ./(Rtot_pos + dudc_pos.*cse_j_pos/F));
 
     len = length(locs); locs = locs(:); s = s(:);
-    ce_tf = zeros(len,length(s)); % Initialize output to zeros
-    % Initialize "D" variables and transfer-function names variable
-    Dterm = zeros(len,1); Dstr = cell(len,1); names = cell(len,1);
+    tf_ce = zeros(len,length(s)); % Initialize output to zeros
     % Find eigenvalues that work for separation-of-variables solution
     ce_roots = findLambda(M+1);
     % For each eigenvalue, compute contribution to transfer function
@@ -173,21 +171,17 @@ function [ce_tf, Dterm, res0] = tf_ce(locs, const, SOC_neg, SOC_pos, cse_neg, cs
             end
             % Add the contribution of this eigenvalue to what has already been
             % computed
-            ce_tf(theLoc,:) = ce_tf(theLoc,:) + Psi*ce_n.';
-            for freq = 1 : size(ce_tf, 2)
-                if isnan(ce_tf(1, freq))
-                    ce_tf(1, freq) = tf0;
+            tf_ce(theLoc,:) = tf_ce(theLoc,:) + Psi*ce_n.';
+            for freq = 1 : size(tf_ce, 2)
+                if isnan(tf_ce(1, freq))
+                    tf_ce(1, freq) = tf0;
                 end
             end
             % Make sure output data structure has "D" term information and the
             % name of the transfer function 
-            if n == 1, 
-              Dterm(theLoc) = 0;
-              Dstr{theLoc} = '0';
-              names{theLoc} = 'ce';
-            end
         end
     end
+    D = 0;
     res0 = zeros(len, 1); % No integrator residue for this transfer function
 
     

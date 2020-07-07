@@ -17,12 +17,16 @@ classdef Blender < handle
             end
         end
 
-        function [next_cs] = c_step(obj, current_cs, max_c, x0, x100)
-            next_z = (current_cs / max_c - x0) / (x100 - x0) - obj.SOC_spacing;
+        function [next_cs] = c_step(obj, current_cs, max_c, x0, x100, electrode)
+            if electrode == 'neg'
+                next_z = (current_cs / max_c - x0) / (x100 - x0) - obj.SOC_spacing;
+            else
+                next_z = (current_cs / max_c - x0) / (x100 - x0) + obj.SOC_spacing;
+            end
             next_cs = ((next_z * (x100 - x0)) + x0) * max_c;
         end
 
-        function [A_estimates, B_estimates, C_estimates, D_estimates, integrator_index, Ts] = create_models(obj, electrode, const)
+        function [A_estimates, B_estimates, C_estimates, D_estimates, integrator_index, Ts] = create_models(obj, T_len, sampling_freq, electrode, const)
             if electrode == 'neg'
                 max_c = const.solid_max_c_neg;
                 x100 = const.x100_neg;
@@ -32,7 +36,7 @@ classdef Blender < handle
                 max_c = const.solid_max_c_pos;
                 x100 = const.x100_pos;
                 x0 = const.x0_pos;
-                cs = max_c * x100;
+                cs = max_c * x0;
             else
                 error("Bad electrode selection");
             end
@@ -41,12 +45,16 @@ classdef Blender < handle
             B_estimates = [];
             C_estimates = [];
             D_estimates = [];
-            z = (cs / max_c - x0) / (x100 - x0);
+            if electrode == 'neg'
+                z = (cs / max_c - x0) / (x100 - x0);
+            else 
+                z = 1;
+            end
             while z >= 0
-                [tf, res0, D, sampling_freq, T_len] = obj.transfer_function(cs, obj.z_coordinates, const, 'neg');
+                [tf, res0, D] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, electrode, const);
                 [A, B, C, D, Ts] = dra(tf, res0, D, sampling_freq, T_len, const);
                 [A, B, C, D, integrator_index] = multi_dra(A, B, C, D, Ts, res0);
-                cs = c_step(obj, cs, max_c, x0, x100);
+                cs = c_step(obj, cs, max_c, x0, x100, electrode);
                 z = z - obj.SOC_spacing;
                 A_estimates = [A_estimates A];
                 B_estimates = [B_estimates B];
@@ -61,13 +69,14 @@ classdef Blender < handle
             if obj.SOC_lut(index) >= SOC
                 SOC1 = index;
                 SOC0 = index + 1;
-            elseif obj.SOC_lut(index) < SOC
+            else 
                 SOC1 = index + 1;
                 SOC0 = index;
             end
+
             phi = (SOC - SOC0) / (SOC1 - SOC0);
-            A0 = A(1 : obj.state_space_size, obj.state_space_size * SOC0 - obj.state_space_size + 1: SOC0 * obj.state_space_size);
-            A1 = A(1 : obj.state_space_size, obj.state_space_size * SOC1 - obj.state_space_size + 1: SOC1 * obj.state_space_size);
+            A0 = A(1 : obj.state_space_size, obj.state_space_size * SOC0 - obj.state_space_size + 1 : SOC0 * obj.state_space_size);
+            A1 = A(1 : obj.state_space_size, obj.state_space_size * SOC1 - obj.state_space_size + 1 : SOC1 * obj.state_space_size);
             B0 = B(1 : obj.state_space_size, SOC0);
             B1 = B(1 : obj.state_space_size, SOC1);
             C0 = C(1, obj.state_space_size * SOC0 - obj.state_space_size + 1 : SOC0 * obj.state_space_size);
