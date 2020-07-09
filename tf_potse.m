@@ -1,7 +1,5 @@
-function [tf_potse, res0, D, sampling_f, T_len] = tf_potse(cse, z_coordinates, const, electrode)
-    sampling_f = 200;
+function [tf_potse, res0, D] = tf_potse(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
-    T_len = 5;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
     s = zeros(1, size(f_vector, 2));

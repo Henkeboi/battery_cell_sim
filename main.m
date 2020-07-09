@@ -22,7 +22,7 @@ cse_pos_blender = Blender(0.01, @tf_cse, [0], 'pos', const);
 cse_pos_blender.create_models(cse_pos_T_len, cse_pos_sampling_f);
 cse_pos_blender.sort();
 
-disp("Running blended Lithium surface concentration dra.")
+disp("Running blended lithium flux dra.")
 j_neg_sampling = 400;
 j_neg_T_len = 5;
 j_neg_blender = Blender(0.01, @tf_j, [0], 'neg', const);
@@ -35,7 +35,18 @@ j_pos_blender = Blender(0.01, @tf_j, [0], 'pos', const);
 j_pos_blender.create_models(j_pos_T_len, j_pos_sampling);
 j_pos_blender.sort();
 
+disp("Running blended potse dra.")
+potse_neg_sampling = 400;
+potse_neg_T_len = 5;
+potse_neg_blender = Blender(0.01, @tf_potse, [0], 'neg', const);
+potse_neg_blender.create_models(potse_neg_T_len, potse_neg_sampling);
+potse_neg_blender.sort();
 
+potse_pos_sampling = 400;
+potse_pos_T_len = 5;
+potse_pos_blender = Blender(0.01, @tf_potse, [0], 'pos', const);
+potse_pos_blender.create_models(potse_pos_T_len, potse_pos_sampling);
+potse_pos_blender.sort();
 
 disp("Simulating.")
 z_neg = zeros(size(load_cycle, 1), 1);
@@ -44,6 +55,8 @@ cse_neg = zeros(size(load_cycle, 1), 1);
 cse_pos = zeros(size(load_cycle, 1), 1);
 j_neg = zeros(size(load_cycle, 1), 1);
 j_pos = zeros(size(load_cycle, 1), 1);
+potse_neg = zeros(size(load_cycle, 1), 1);
+potse_pos = zeros(size(load_cycle, 1), 1);
 time = zeros(size(load_cycle, 1), 1);
 time_acc = 0;
 
@@ -71,8 +84,13 @@ for i = 1 : size(load_cycle, 1)
 
     [j_pos_X, j_pos_Y, j_pos_integrator_index] = j_pos_blender.step(U, SOC_pos);
     j_pos(i) = j_pos_Y;
+ 
+    [potse_neg_X, potse_neg_Y, potse_neg_integrator_index] = potse_neg_blender.step(U, SOC_neg);
+    potse_neg(i) = potse_neg_Y; % TODO: Debieas and debug.
 
-
+    [potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
+    potse_pos(i) = potse_pos_Y; % TODO: Debieas and debug.
+    
 
     time(i) = time_acc;
     time_acc = time(i) + delta_time;
@@ -131,3 +149,20 @@ title("Lithium flux at the electrodes")
 xlabel("Time")
 ylabel("Lithium flux [mol / m^2 / s]")
 grid on;
+
+f4 = figure;
+plot(time, potse_neg);
+hold on;
+plot(time, potse_pos, 'r');
+title("Potse at the electrodes")
+xlabel("Time")
+ylabel("Potential [V]")
+grid on;
+
+
+
+
+
+
+
+

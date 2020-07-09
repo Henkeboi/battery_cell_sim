@@ -74,7 +74,7 @@ classdef Blender < handle
             obj.X = X;
         end
 
-        function [A_blended, B_blended, C_blended, D_blended, Ts] = blend_model(obj, SOC)
+        function [A_blended, B_blended, C_blended, D_blended] = blend_model(obj, SOC)
             if isnan(SOC)
                 error("Input is NAN")
             end
@@ -93,7 +93,6 @@ classdef Blender < handle
             B_blended = (1 - phi) * B0 + phi * B1;
             C_blended = (1 - phi) * C0 + phi * C1;
             D_blended = 0;
-            Ts = obj.Ts;
             if any(isnan(A_blended))
                 error("A_blended is NAN");
             end
