@@ -8,12 +8,11 @@ cs0_neg = const.solid_max_c_neg * const.x100_neg;
 cs0_pos = const.solid_max_c_pos * const.x0_pos;
 disp("Running blended Lithium surface concentration dra.")
 
-% cse_neg_sampling_f = 1000;
-% cse_neg_T_len = 50;
-% cse_neg_blender = Blender(0.1, @tf_cse, [0], const);
-% cse_neg_integrator_index = cse_neg_blender.create_models(cse_neg_T_len, cse_neg_sampling_f, 'neg');
-% cse_neg_blender.sort();
-% [cse_neg_A, cse_neg_B, cse_neg_C, cse_neg_D, cse_neg_Ts] = cse_neg_blender.blend_model(calculate_SOC(cs0_neg, 0, 'neg', const));
+cse_neg_sampling_f = 1000;
+cse_neg_T_len = 50;
+cse_neg_blender = Blender(0.1, @tf_cse, [0], const);
+cse_neg_blender.create_models(cse_neg_T_len, cse_neg_sampling_f, 'neg');
+cse_neg_blender.sort();
 
 cse_pos_sampling_f = 400;
 cse_pos_T_len = 5;
@@ -47,7 +46,7 @@ cse_pos_blender.sort();
 % [ce_A, ce_B, ce_C, ce_D, ce_Ts] = dra(tf_ce, res0, D, sampling_freq, T_len, const);
 % [ce_A, ce_B, ce_C, ce_D, ce_integrator_index] = multi_dra(ce_A, ce_B, ce_C, ce_D, ce_Ts, res0);
 
-% disp("Simulating.")
+disp("Simulating.")
 % cse_neg_X = zeros(size(cse_neg_A, 1), 1);
 % cse_pos_X = zeros(size(cse_pos_A, 1), 1);
 % j_neg_X = zeros(size(j_neg_A, 1), 1);
@@ -67,24 +66,27 @@ time = zeros(size(load_cycle, 1), 1);
 time_acc = 0;
 
 % TODO: Debias the variables.
-SOC = 1;
+SOC_pos = 1;
+SOC_neg = 1;
 for i = 1 : size(load_cycle, 1)
     % Find U.
     delta_time = load_cycle(i, 1);
     current = load_cycle(i, 2);
     P = 2;
     U = current * delta_time / P;
-    [cse_pos_X, Y, cse_pos_integrator_index] = cse_pos_blender.step(U, SOC);
 
-    % cse_pos(i) = Y;
+    [cse_neg_X, cse_neg_Y, cse_neg_integrator_index] = cse_neg_blender.step(U, SOC_neg);
+    cse_neg(i) = cse_neg_Y;
+    z_neg(i) = calculate_SOC(cs0_neg, cse_neg_X(cse_neg_integrator_index), 'neg', const); 
+    SOC_neg = z_neg(i);
+
+
+    [cse_pos_X, cse_pos_Y, cse_pos_integrator_index] = cse_pos_blender.step(U, SOC_pos);
+    cse_pos(i) = cse_pos_Y;
     z_pos(i) = calculate_SOC(cs0_pos, cse_pos_X(cse_pos_integrator_index), 'pos', const); 
-    SOC = z_pos(i);
+    SOC_pos = z_pos(i);
 
 
-    % Find SOC and lithium surface concentration.
-    % cse_neg_X = cse_neg_A * cse_neg_X + cse_neg_B * U;
-    % cse_neg(i) = cse_neg_C * cse_neg_X + cse_neg_D * U;
-    % z_neg(i) = calculate_SOC(cs0_neg, cse_neg_X(cse_neg_integrator_index), 'neg', const); 
 
     % cse_pos_X = cse_pos_A * cse_pos_X + U;
     % cse_pos(i) = cse_pos_C * cse_pos_X + cse_pos_D * U;
@@ -145,22 +147,22 @@ end
 disp("Plotting results.")
 
 f1 = figure;
-%plot(time, z_neg);
+plot(time, z_neg);
 hold on;
 plot(time, z_pos, 'r');
 title("SOC")
 xlabel("Time")
 ylabel("SOC")
 grid on;
-% 
-% f2 = figure;
-% plot(time, cse_neg);
-% hold on;
-% plot(time, cse_pos, 'r');
-% title("Average surface concentration")
-% xlabel("Time")
-% ylabel("Lithium concentration [mol / m^3]")
-% grid on;
+
+f2 = figure;
+plot(time, cse_neg);
+hold on;
+plot(time, cse_pos, 'r');
+title("Average surface concentration")
+xlabel("Time")
+ylabel("Lithium concentration [mol / m^3]")
+grid on;
 % 
 % f3 = figure;
 % plot(time, j_neg);

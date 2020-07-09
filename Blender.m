@@ -66,7 +66,6 @@ classdef Blender < handle
             [A, B, C, D] = obj.blend_model(SOC);
             X = A * obj.T * obj.X + B * U;
             Y = C * obj.X + D * U;
-    
             obj.integrator_index = 4;                
 
             integrator_index = obj.integrator_index;
@@ -99,10 +98,10 @@ classdef Blender < handle
         end
 
         function [A_sorted, B_sorted, C_sorted, D_sorted] = sort(obj)
+            obj.X = zeros(obj.ss_size, 1);
             for i = 1 : size(obj.SOC_lut, 2)
                 obj.sort_single_model(i);
             end
-            obj.X = zeros(obj.ss_size, 1);
         end
 
         function integrator_index = sort_single_model(obj, index)
