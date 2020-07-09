@@ -1,6 +1,7 @@
 classdef Blender < handle
     properties(SetAccess = private)
         const
+        electrode
         SOC_spacing {mustBeNumeric}
         SOC_lut
         transfer_function
@@ -17,8 +18,9 @@ classdef Blender < handle
         Ts;
     end
     methods
-        function obj = Blender(SOC_spacing, transfer_function, z_coordinates, const)
+        function obj = Blender(SOC_spacing, transfer_function, z_coordinates, electrode, const)
             obj.const = const;
+            obj.electrode = electrode;
             obj.SOC_spacing = SOC_spacing;
             obj.transfer_function = transfer_function;
             obj.z_coordinates = z_coordinates;
@@ -32,25 +34,26 @@ classdef Blender < handle
             obj.D_estimates = [];
         end
 
-        function next_cs = blending_step(obj, current_z, electrode)
-            if electrode == 'neg'
+        function next_cs = blending_step(obj, current_z)
+            if obj.electrode == 'neg'
                 x100 = obj.const.x100_neg;
                 x0 = obj.const.x0_neg;
                 c_max = obj.const.solid_max_c_neg;
-            elseif electrode == 'pos'
+                next_cs = c_max - (current_z * (x100 - x0) + x0) * c_max;
+            elseif obj.electrode == 'pos'
                 x100 = obj.const.x100_pos;
                 x0 = obj.const.x0_pos;
                 c_max = obj.const.solid_max_c_pos;
+                next_cs = (current_z * (x100 - x0) + x0) * c_max;
             else
                 error("Bad electrode selection");
             end
-            next_cs = (current_z * (x100 - x0) + x0) * c_max;
         end
 
-        function create_models(obj, T_len, sampling_freq, electrode)
+        function create_models(obj, T_len, sampling_freq)
             for z = 1 : -obj.SOC_spacing : 0
-                cs = blending_step(obj, z, electrode);
-                [tf, obj.res0, D] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, electrode, obj.const);
+                cs = blending_step(obj, z);
+                [tf, obj.res0, D] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, obj.electrode, obj.const);
                 [A, B, C, D, obj.Ts] = dra(tf, obj.res0, D, sampling_freq, T_len, obj.const);
                 [A, B, C, D] = multi_dra(A, B, C, D, obj.Ts, obj.res0);
                 obj.A_estimates = [obj.A_estimates A];
@@ -67,7 +70,6 @@ classdef Blender < handle
             X = A * obj.T * obj.X + B * U;
             Y = C * obj.X + D * U;
             obj.integrator_index = 4;                
-
             integrator_index = obj.integrator_index;
             obj.X = X;
         end

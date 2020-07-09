@@ -70,7 +70,7 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
     res0 = zeros(size(z_coordinates, 2), size(z_coordinates, 2));
     % Find the unit impulse response where t = 0 and s -> inf.
     nu_inf = L * sqrt((alpha / kappa + alpha / sigma) / (Rct + Rfilm));  % From Gregory Plett.
-    D = zeros(size(nu_inf, 2));
+    D = zeros(size(s, 2));
 
     if any(isnan(tf_j))
         error("NAN in tf_j");
