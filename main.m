@@ -11,18 +11,18 @@ cse0_pos = cs0_neg / const.radius_pos;
 
 disp("Running blended Lithium surface concentration dra.")
 cse_neg_sampling_f = 400;
-cse_neg_T_len = 5;
+cse_neg_T_len = 10;
 cse_neg_blender = Blender(0.01, @tf_cse, [0], 'neg', const);
 cse_neg_blender.create_models(cse_neg_T_len, cse_neg_sampling_f);
 cse_neg_blender.sort();
 
 cse_pos_sampling_f = 400;
-cse_pos_T_len = 5;
+cse_pos_T_len = 10;
 cse_pos_blender = Blender(0.01, @tf_cse, [0], 'pos', const);
 cse_pos_blender.create_models(cse_pos_T_len, cse_pos_sampling_f);
 cse_pos_blender.sort();
 
-disp("Running blended lithium flux dra.")
+% disp("Running blended lithium flux dra.")
 j_neg_sampling = 400;
 j_neg_T_len = 5;
 j_neg_blender = Blender(0.01, @tf_j, [0], 'neg', const);
@@ -36,14 +36,14 @@ j_pos_blender.create_models(j_pos_T_len, j_pos_sampling);
 j_pos_blender.sort();
 
 disp("Running blended potse dra.")
-potse_neg_sampling = 400;
-potse_neg_T_len = 5;
+potse_neg_sampling = 1000;
+potse_neg_T_len = 500;
 potse_neg_blender = Blender(0.01, @tf_potse, [0], 'neg', const);
 potse_neg_blender.create_models(potse_neg_T_len, potse_neg_sampling);
 potse_neg_blender.sort();
 
-potse_pos_sampling = 400;
-potse_pos_T_len = 5;
+potse_pos_sampling = 1000;
+potse_pos_T_len = 500;
 potse_pos_blender = Blender(0.01, @tf_potse, [0], 'pos', const);
 potse_pos_blender.create_models(potse_pos_T_len, potse_pos_sampling);
 potse_pos_blender.sort();
@@ -158,11 +158,3 @@ title("Potse at the electrodes")
 xlabel("Time")
 ylabel("Potential [V]")
 grid on;
-
-
-
-
-
-
-
-

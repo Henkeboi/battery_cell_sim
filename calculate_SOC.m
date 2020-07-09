@@ -2,6 +2,7 @@ function SOC = calculate_SOC(cs, integrator_state, electrode, const)
     if isnan(integrator_state)
         error("Input is NAN")
     end
+
     % Calculates SOC by subtracting lithium flux out of the particles from initial concentration. 
     F = const.F;
     if electrode == 'neg'

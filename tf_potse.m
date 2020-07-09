@@ -41,7 +41,7 @@ function [tf_potse, res0, D] = tf_potse(cse, z_coordinates, T_len, sampling_f, e
     else
         error("Bad electrode selection");
     end
-    z = 0.1; % z coordinate
+    z = z_coordinates(1); % choose z(1)
 
     % Calculate nu
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));

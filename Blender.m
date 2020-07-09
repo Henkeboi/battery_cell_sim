@@ -12,9 +12,9 @@ classdef Blender < handle
         D_estimates;
         X;
         T;
+        T_list;
         res0;
         ss_size;
-        integrator_index;
         Ts;
     end
     methods
@@ -66,15 +66,14 @@ classdef Blender < handle
 
         function [X, Y, integrator_index] = step(obj, U, SOC)
             U = U / obj.Ts;
-            [A, B, C, D] = obj.blend_model(SOC);
-            X = A * obj.T * obj.X + B * U;
-            Y = C * obj.X + D * U;
-            obj.integrator_index = 4;                
-            integrator_index = obj.integrator_index;
+            [A, B, C, D, T] = obj.blend_model(SOC);
+            integrator_index = obj.ss_size;
+            X = A * T * obj.X + B * U;
+            Y = C * T * obj.X + D * U;
             obj.X = X;
         end
 
-        function [A_blended, B_blended, C_blended, D_blended] = blend_model(obj, SOC)
+        function [A_blended, B_blended, C_blended, D_blended, T] = blend_model(obj, SOC)
             if isnan(SOC)
                 error("Input is NAN")
             end
@@ -88,11 +87,15 @@ classdef Blender < handle
             B1 = obj.B_estimates(1 : obj.ss_size, SOC1);
             C0 = obj.C_estimates(1, obj.ss_size * SOC0 - obj.ss_size + 1 : SOC0 * obj.ss_size);
             C1 = obj.C_estimates(1, obj.ss_size * SOC1 - obj.ss_size + 1 : SOC1 * obj.ss_size);
+            T0 = obj.T_list(1 : obj.ss_size, obj.ss_size * SOC0 - obj.ss_size + 1 : SOC0 * obj.ss_size);
+            T1 = obj.T_list(1 : obj.ss_size, obj.ss_size * SOC1 - obj.ss_size + 1 : SOC1 * obj.ss_size);
 
             A_blended = (1 - phi) * A0 + phi * A1;
             B_blended = (1 - phi) * B0 + phi * B1;
             C_blended = (1 - phi) * C0 + phi * C1;
             D_blended = 0;
+            T = obj.T;% (1 - phi) * T0 + phi * T1;
+
             if any(isnan(A_blended))
                 error("A_blended is NAN");
             end
@@ -100,36 +103,58 @@ classdef Blender < handle
 
         function [A_sorted, B_sorted, C_sorted, D_sorted] = sort(obj)
             obj.X = zeros(obj.ss_size, 1);
+            obj.T_list = zeros(obj.ss_size, size(obj.SOC_lut, 2) * obj.ss_size);
             for i = 1 : size(obj.SOC_lut, 2)
                 obj.sort_single_model(i);
             end
         end
 
-        function integrator_index = sort_single_model(obj, index)
+        function sort_single_model(obj, index)
             A = obj.A_estimates(1 : obj.ss_size, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size);
             B = obj.B_estimates(1 : obj.ss_size, index);
             C = obj.C_estimates(1, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size);
 
+            % T1
             [T1, D] = eig(A);
             A = inv(T1) * A * T1;
             B = inv(T1) * B;
             C = C * T1;
+
+            % T2
             T2 = diag(B);
             B = inv(T2) * B;
             C = C * T2;
 
             % T3
-            % A_diag = sort(diag(A));
-            % A_test = zeros(size(A, 1), size(A, 2));
-            % larger_than_integrator_counter = 0; 
-            % for i = 1 : size(A, 1)
-            %     A(i, i) = A_diag(i, 1);
-            %     if A(i, i) > 1
-            %         larger_than_integrator_counter = larger_than_integrator_counter + 1;
-            %     end
-            % end
+            [A_diag, sorted_indexes] = sort(diag(A));
+            integrator_index = obj.ss_size; 
+            for i = 1 : size(A, 1)
+                A(i, i) = A_diag(i, 1);
+                if A(i, i) > 1
+                    integrator_index = integrator_index - 1;
+                end
+            end
+            swapped_T1 = zeros(obj.ss_size, obj.ss_size);
+            swapped_C = zeros(1, obj.ss_size);
+            for i = 1 : size(sorted_indexes, 1)
+                swapped_T1(1 : obj.ss_size ,i) = T1(1 : obj.ss_size, sorted_indexes(i));
+                swapped_C(1, i) = C(1, sorted_indexes(i));
+                if i == integrator_index
+                    A(i, i) = A(obj.ss_size, obj.ss_size);
+                    A(obj.ss_size, obj.ss_size) = 1;
+                end
+            end
+            temp_T1_col  = swapped_T1(1 : obj.ss_size, integrator_index);
+            swapped_T1(1 : obj.ss_size, integrator_index) = swapped_T1(1 : obj.ss_size, obj.ss_size);
+            swapped_T1(1 : obj.ss_size, obj.ss_size) = temp_T1_col;
+            T1 = swapped_T1;
 
-            % obj.integrator_index = size(A, 2) - larger_than_integrator_counter;
+            temp_C_col = swapped_C(1, integrator_index);
+            swapped_C(1, integrator_index) = swapped_C(1, obj.ss_size);
+            swapped_C(1, obj.ss_size) = temp_C_col;
+            C = swapped_C;
+
+            obj.T_list(1 : obj.ss_size, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size)  = T1;
             obj.T = T1;
             obj.A_estimates(1 : obj.ss_size, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size) = A;
             obj.B_estimates(1 : obj.ss_size, index) = B;
