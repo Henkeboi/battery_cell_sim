@@ -18,8 +18,8 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
         Ds = const.diffusivity_neg;
         A = const.A_neg;
         alpha = const.alpha_neg;
-        sigma = const.sigma_neg;
-        kappa = const.kappa_neg;
+        sigma = const.sigma_eff_neg;
+        kappa = const.kappa_eff_neg;
         beta = Rs * sqrt(s / Ds);
         eps = const.porosity_solid_neg;
         Uocv_d = calculate_ocv_derivative_neg(cse, const);
@@ -33,8 +33,8 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
         Ds = const.diffusivity_pos;
         A = const.A_pos;
         alpha = const.alpha_pos;
-        sigma = const.sigma_pos;
-        kappa = const.kappa_pos;
+        sigma = const.sigma_eff_pos;
+        kappa = const.kappa_eff_pos;
         beta = Rs * sqrt(s / Ds);
         eps = const.porosity_solid_pos;
         Uocv_d = calculate_ocv_derivative_pos(cse, const);
@@ -44,22 +44,15 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
 
     % Calculate nu
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-
     z = 0.0; % Temporarly choose z = 0.0
-    % res0 = 1 ./ (eps * A * F * L);
+    res0 = (3 / Rs) ./ s; 
+    res0(1, 1) = -Rs / (5 * Ds);
     D = 0;
-    % tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) * Rs .* nu ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(nu) .* (1 - beta .* coth(beta)));
-    % tf_cse0 = (kappa * Rs * (z - 1) + Rs * sigma) / (alpha * F * L * A * (kappa + sigma)); % Found using Maple.
+    tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) * Rs .* nu ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(nu) .* (1 - beta .* coth(beta)));
+    tf_cse = tf_cse + res0;
+    tf_cse0 = -Rs / (5 * Ds);
+    res0 = 0;
 
-
-    cse_j = Rs/Ds./(1-beta.*coth(beta));
-    res0 = -3/(A*alpha*F*L*Rs);
-    tf_cse0 = (-6*Uocv_d*Rs*kappa*sigma +5*alpha*Ds*F*L^2*((2-6*z+3*z.^2)*kappa +(3*z.^2-1)*sigma))./ (30*A*alpha*Ds*Uocv_d*F*L*kappa*sigma);
-    tf_cse = nu./(alpha*F*L*A*(kappa+sigma).*sinh(nu)).*(sigma*cosh(nu.*z) + kappa*cosh(nu.*(z-1)));
-    tf_cse = tf_cse.*cse_j;    % Convert tf_j to tf_cse
-    tf_cse = tf_cse - res0./s; % Remove pole at origin
-
-    % tf_cse = tf_cse + res0 ./ s;
     for i = 1 : size(tf_cse, 2)
         if isnan(tf_cse(1, i)) && s(i, 1) == 0
             tf_cse(1, i) = tf_cse0;

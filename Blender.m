@@ -12,7 +12,6 @@ classdef Blender < handle
         D_estimates;
         X;
         T;
-        T_list;
         res0;
         ss_size;
         Ts;
@@ -87,14 +86,12 @@ classdef Blender < handle
             B1 = obj.B_estimates(1 : obj.ss_size, SOC1);
             C0 = obj.C_estimates(1, obj.ss_size * SOC0 - obj.ss_size + 1 : SOC0 * obj.ss_size);
             C1 = obj.C_estimates(1, obj.ss_size * SOC1 - obj.ss_size + 1 : SOC1 * obj.ss_size);
-            T0 = obj.T_list(1 : obj.ss_size, obj.ss_size * SOC0 - obj.ss_size + 1 : SOC0 * obj.ss_size);
-            T1 = obj.T_list(1 : obj.ss_size, obj.ss_size * SOC1 - obj.ss_size + 1 : SOC1 * obj.ss_size);
 
             A_blended = (1 - phi) * A0 + phi * A1;
             B_blended = (1 - phi) * B0 + phi * B1;
             C_blended = (1 - phi) * C0 + phi * C1;
             D_blended = 0;
-            T = obj.T;% (1 - phi) * T0 + phi * T1;
+            T = obj.T;
 
             if any(isnan(A_blended))
                 error("A_blended is NAN");
@@ -103,7 +100,6 @@ classdef Blender < handle
 
         function [A_sorted, B_sorted, C_sorted, D_sorted] = sort(obj)
             obj.X = zeros(obj.ss_size, 1);
-            obj.T_list = zeros(obj.ss_size, size(obj.SOC_lut, 2) * obj.ss_size);
             for i = 1 : size(obj.SOC_lut, 2)
                 obj.sort_single_model(i);
             end
@@ -154,7 +150,6 @@ classdef Blender < handle
             swapped_C(1, obj.ss_size) = temp_C_col;
             C = swapped_C;
 
-            obj.T_list(1 : obj.ss_size, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size)  = T1;
             obj.T = T1;
             obj.A_estimates(1 : obj.ss_size, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size) = A;
             obj.B_estimates(1 : obj.ss_size, index) = B;

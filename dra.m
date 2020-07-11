@@ -12,7 +12,7 @@ function [A_est, B_est, C_est, D_est, T_shifted] = dra(transfer_function, res0, 
 
     h_pulse = [0 diff(interp1(td, h_step, time_vector))];
 
-    hankel_size = 3;
+    hankel_size = 5;
     hankel_matrix = hankel(h_pulse(2 : end));
     H = hankel_matrix(1 : hankel_size, 1 : hankel_size);
     H_shifted = hankel_matrix(2 : hankel_size + 1, 1 : hankel_size);

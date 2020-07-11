@@ -18,11 +18,11 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
         Ds = const.diffusivity_neg;
         A = const.A_neg;
         alpha = const.alpha_neg;
-        sigma = const.sigma_neg;
-        kappa = const.kappa_neg;
+        sigma = const.sigma_eff_neg;
+        kappa = const.kappa_eff_neg;
         beta = Rs * sqrt(s / Ds);
         eps = const.porosity_solid_neg;
-        Uovc_d = calculate_ocv_derivative_neg(cse, const);
+        Uocv_d = calculate_ocv_derivative_neg(cse, const);
     elseif electrode == 'pos'
         Rct = const.R_ct_pos;
         Rfilm = const.R_film_pos;
@@ -33,17 +33,17 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
         Ds = const.diffusivity_pos;
         A = const.A_pos;
         alpha = const.alpha_pos;
-        sigma = const.sigma_pos;
-        kappa = const.kappa_pos;
+        sigma = const.sigma_eff_pos;
+        kappa = const.kappa_eff_pos;
         beta = Rs * sqrt(s / Ds);
         eps = const.porosity_solid_pos;
-        Uovc_d = calculate_ocv_derivative_pos(cse, const);
+        Uocv_d = calculate_ocv_derivative_pos(cse, const);
     else
         error("Bad electrode selection");
     end
 
     % Calculate nu
-    nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
+    nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
 
     % Calculate TF potential between solid and electrolyte.
     tf_phi = zeros(size(s, 2), size(z_coordinates, 2));
@@ -61,17 +61,14 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
             end
         end
     end
+ 
+    res0 = 0;
+    D = 0;
 
     if electrode == 'pos'
         tf_j = -tf_j;
     end
-    
-    % Find res0
-    res0 = zeros(size(z_coordinates, 2), size(z_coordinates, 2));
-    % Find the unit impulse response where t = 0 and s -> inf.
-    nu_inf = L * sqrt((alpha / kappa + alpha / sigma) / (Rct + Rfilm));  % From Gregory Plett.
-    D = zeros(size(s, 2));
-
+   
     if any(isnan(tf_j))
         error("NAN in tf_j");
     end
