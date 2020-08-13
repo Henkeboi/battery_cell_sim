@@ -1,4 +1,4 @@
-function [tf_pote, res0, D, sampling_f, T_len] = tf_pote(cse, z_coordinates, const, electrode)
+function [tf_pote, res0, sampling_f, T_len] = tf_pote(cse, z_coordinates, const, electrode)
     sampling_f = 200;
     T = 1 / sampling_f;
     T_len = 5;
@@ -49,7 +49,6 @@ function [tf_pote, res0, D, sampling_f, T_len] = tf_pote(cse, z_coordinates, con
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uovc_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
     tf_pote = 0;
     res0 = 0;
-    D = 0;
 
     if any(isnan(tf_pote))
         error("NAN in tf_potse");

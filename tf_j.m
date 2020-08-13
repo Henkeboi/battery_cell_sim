@@ -1,4 +1,4 @@
-function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_j, res0] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -63,7 +63,6 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
     end
  
     res0 = 0;
-    D = 0;
 
     if electrode == 'pos'
         tf_j = -tf_j;

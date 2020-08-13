@@ -8,7 +8,7 @@
 % This file is provided as a supplement to: Plett, Gregory L., "Battery
 % Management Systems, Volume I, Battery Modeling," Artech House, 2015.
 
-function [tf_ce, res0, D, sampling_f, T_len] = tf_ce(SOC_neg, SOC_pos, cse_neg, cse_pos, calculate_ocv_derivative_neg, calculate_ocv_derivative_pos, locs, const)
+function [tf_ce, res0, sampling_f, T_len] = tf_ce(SOC_neg, SOC_pos, cse_neg, cse_pos, calculate_ocv_derivative_neg, calculate_ocv_derivative_pos, locs, const)
     M = 10; % Must be at least as big as the statespace.
     sampling_f = 1000;
     T = 1 / sampling_f;
@@ -181,7 +181,6 @@ function [tf_ce, res0, D, sampling_f, T_len] = tf_ce(SOC_neg, SOC_pos, cse_neg, 
             % name of the transfer function 
         end
     end
-    D = 0;
     res0 = zeros(len, 1); % No integrator residue for this transfer function
 
     

@@ -10,7 +10,7 @@ cs_max_neg = const.solid_max_c_neg;
 cs_max_pos = const.solid_max_c_pos;
 
 % cse = 20000;
-% [tf_potse, res0, D] = tf_pots(cse, [0], 100, 200, 'neg', const);
+% [tf_potse, res0]  = tf_pots(cse, [0], 100, 200, 'neg', const);
 % [A, B, C, D, T_shifted] = dra(tf_potse, res0, D, 200, 100, const);
 % S = ss(A, B, C, D, T_shifted);
 
@@ -229,14 +229,14 @@ xlabel("Time")
 ylabel("Potential [V]")
 grid on;
 
-% f5 = figure;
-% plot(time, pots_neg);
-% % hold on;
-% % plot(time, pots_pos, 'r');
-% title("Pots at the electrodes")
-% xlabel("Time")
-% ylabel("Potential [V]")
-% grid on;
+f5 = figure;
+plot(time, pots_neg);
+% hold on;
+% plot(time, pots_pos, 'r');
+title("Pots at the electrodes")
+xlabel("Time")
+ylabel("Potential [V]")
+grid on;
  
 % f6 = figure;
 % plot(time, v);

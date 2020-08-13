@@ -1,4 +1,4 @@
-function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_cse, res0] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -45,13 +45,23 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
     % Calculate nu
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
     z = 0.0; % Temporarly choose z = 0.0
-    res0 = (3 / Rs) ./ s; 
+    % Old
+    res0 = -(3 / Rs) ./ s; 
     res0(1, 1) = -Rs / (5 * Ds);
-    D = 0;
     tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) * Rs .* nu ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(nu) .* (1 - beta .* coth(beta)));
     tf_cse = tf_cse + res0;
     tf_cse0 = -Rs / (5 * Ds);
     res0 = 0;
+
+    % New
+    %tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1)) * Rs .* nu) ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(nu) .* (1 - beta .* coth(beta)));
+
+    %%k = 0.1;
+    %%beta = Rs * sqrt(k / Ds);
+    %%tf_cse0 = (sigma * cosh(k * z) + kappa * cosh(k * (z - 1)) * Rs .* k) ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(k) .* (1 - beta .* coth(beta)))
+    %tf_cse0 = 0;
+    %res0 = -1 ./ (eps * A * F * L * s);
+    %D = 0;
 
     for i = 1 : size(tf_cse, 2)
         if isnan(tf_cse(1, i)) && s(i, 1) == 0

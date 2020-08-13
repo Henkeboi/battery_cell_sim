@@ -1,4 +1,4 @@
-function [tf_pots, res0, D] = tf_pots(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_pots, res0] = tf_pots(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -45,7 +45,6 @@ function [tf_pots, res0, D] = tf_pots(cse, z_coordinates, T_len, sampling_f, ele
     nu(1, 1) = 1;
     tf_pots = -L * (kappa * (cosh(nu) - cosh((z - 1) * nu)) + sigma * (1 - cosh(z * nu) + z * nu .* sinh(nu))) ./ (A * sigma * (kappa + sigma) * nu .* sinh(nu));
     tf0 = L * z * (kappa / sigma + 1) * (z / 2 - 1) / (A * (kappa + sigma));
-    D = 0;
     res0 = 0;
 
     for i = 1 : size(tf_pots, 2)
