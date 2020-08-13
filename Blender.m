@@ -17,11 +17,12 @@ classdef Blender < handle
         Ts;
     end
     methods
-        function obj = Blender(SOC_spacing, transfer_function, z_coordinates, electrode, const)
+        function obj = Blender(SOC_spacing, transfer_function, Ts, z_coordinates, electrode, const)
             obj.const = const;
             obj.electrode = electrode;
             obj.SOC_spacing = SOC_spacing;
             obj.transfer_function = transfer_function;
+            obj.Ts = Ts;
             obj.z_coordinates = z_coordinates;
             obj.ss_size = 0;
             for i = 1 : - SOC_spacing : 0
@@ -32,7 +33,7 @@ classdef Blender < handle
             obj.C_estimates = [];
             obj.D_estimates = [];
         end
-
+        
         function next_cs = blending_step(obj, current_z)
             if obj.electrode == 'neg'
                 x100 = obj.const.x100_neg;
@@ -49,11 +50,11 @@ classdef Blender < handle
             end
         end
 
-        function create_models(obj, T_len, sampling_freq)
+        function create_models(obj, T_len, sampling_freq, Ts)
             for z = 1 : -obj.SOC_spacing : 0
                 cs = blending_step(obj, z);
                 [tf, obj.res0, D] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, obj.electrode, obj.const);
-                [A, B, C, D, obj.Ts] = dra(tf, obj.res0, D, sampling_freq, T_len, obj.const);
+                [A, B, C, D] = dra(tf, obj.res0, D, sampling_freq, T_len, obj.Ts, obj.const);
                 [A, B, C, D] = multi_dra(A, B, C, D, obj.Ts, obj.res0);
                 obj.A_estimates = [obj.A_estimates A];
                 obj.B_estimates = [obj.B_estimates B];
@@ -154,6 +155,9 @@ classdef Blender < handle
             obj.A_estimates(1 : obj.ss_size, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size) = A;
             obj.B_estimates(1 : obj.ss_size, index) = B;
             obj.C_estimates(1, obj.ss_size * index - obj.ss_size + 1 : index * obj.ss_size) = C;
+            if any(isnan(A)) or any(isnan(B)) or any(isnan(C)) or any(isnan(D))
+                error("Nan in blender");
+            end
         end
     end
 end
