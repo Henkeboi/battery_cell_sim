@@ -1,4 +1,4 @@
-function [tf_potse, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_potse, res0] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -42,26 +42,15 @@ function [tf_potse, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, elect
         error("Bad electrode selection");
     end
 
-    % Calculate nu
-    nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-    % Calculate TF potential between solid and electrolyte.
-    z = 0;
-    tf_potse0 = -Rs / 5 / Ds; % 1 / (L * alpha * F * A); % Found using Maple.
-    res0 = (Uocv_d * 3 / Rs) ./ s; % From DRA example 3.
-    res0(1, 1) = -Uocv_d * Rs / (5 * Ds); % Analytic solution DRA example 3.
-    tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)) + res0;
-    
-    for i = 1 : size(tf_potse, 2)
-        if isnan(tf_potse(1, i))
-            tf_potse(1, i) = tf_potse0;
-        end
-    end
-
+    nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta)))); 
+    z = 0.5;
+    tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu));
+    tf_potse0 = L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
+    tf_potse(1, 1) = tf_potse0;
     res0 = 0;
-    D = 0;
+
     if electrode == 'pos'
         tf_potse = -tf_potse;
-        res0 = -res0;
     end
    
     if any(isnan(tf_potse))

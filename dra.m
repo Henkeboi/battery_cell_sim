@@ -1,4 +1,4 @@
-function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, D, sampling_freq, T_len, T_shifted, const)
+function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_freq, T_len, T_shifted, const)
     % sampling_freq and T_len needs to be the same as in the transfer function.
     T = 1 / sampling_freq;
     num_samples = 2 ^ (ceil(log2(T_len * sampling_freq)));
@@ -29,5 +29,5 @@ function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, D, sampling
     B_est = [extended_controllability(:, 1)]; 
     C_est = [extended_observability(1, :)];
     D_est = [h_pulse(1 : 1)];
-    res0 = res0(1); % z(1) choosen. TODO: Multiple z or x locations.
+    res0 = res0; % z(1) choosen. TODO: Multiple z or x locations.
 end
