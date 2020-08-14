@@ -1,4 +1,4 @@
-function [tf_pots, res0] = tf_pots(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_pots, res0, D] = tf_pots(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -44,14 +44,11 @@ function [tf_pots, res0] = tf_pots(cse, z_coordinates, T_len, sampling_f, electr
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
     nu(1, 1) = 1;
     tf_pots = -L * (kappa * (cosh(nu) - cosh((z - 1) * nu)) + sigma * (1 - cosh(z * nu) + z * nu .* sinh(nu))) ./ (A * sigma * (kappa + sigma) * nu .* sinh(nu));
-    tf0 = L * z * (kappa / sigma + 1) * (z / 2 - 1) / (A * (kappa + sigma));
-    res0 = 0;
+    tf_pots0 = L * z * (z / 2 - 1) / (A * sigma);
+    tf_pots(1) = tf_pots0;
 
-    for i = 1 : size(tf_pots, 2)
-        if isnan(tf_pots(1, i))
-            tf_pots(1, i) = tf0;
-        end
-    end
+    res0 = 0;
+    D = -L * z / (A * sigma * (kappa + sigma));
 
     if electrode == 'pos'
         tf_pots = -tf_pots;

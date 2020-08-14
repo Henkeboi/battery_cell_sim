@@ -1,4 +1,4 @@
-function [tf_potse, res0] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_potse, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -46,8 +46,10 @@ function [tf_potse, res0] = tf_j(cse, z_coordinates, T_len, sampling_f, electrod
     z = 0.5;
     tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu));
     tf_potse0 = L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
-    tf_potse(1, 1) = tf_potse0;
+    tf_potse(1) = tf_potse0;
+
     res0 = 0;
+    D = 0;
 
     if electrode == 'pos'
         tf_potse = -tf_potse;

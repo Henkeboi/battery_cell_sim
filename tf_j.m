@@ -1,4 +1,4 @@
-function [tf_j, res0] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -42,40 +42,20 @@ function [tf_j, res0] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, c
         error("Bad electrode selection");
     end
 
-    % % Calculate nu
-    % nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-
-    % % Calculate TF potential between solid and electrolyte.
-    % tf_phi = zeros(size(s, 2), size(z_coordinates, 2));
-    % tf_j0 = 1 / (L * alpha * F * A); % Found using Maple.
-    % for i = 1 : size(z_coordinates, 2)
-    %     z = z_coordinates(1, i); 
-    %     tf_phi = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu)); % PHI / Iapp.
-    %     tf_j(:, i) = nu .* tf_phi .* nu / (alpha * F * L * L * (1 / kappa + 1 / sigma));
-    % end
-
-    % for i = 1 : size(z_coordinates, 2) 
-    %     for j = 1 : size(s, 2)
-    %         if isnan(tf_j(j, i)) && s(1, j) == 0
-    %             tf_j(j, i) = tf_j0;
-    %         end
-    %     end
-    % end
-    % res0 = 0;
-
-
+    
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
     z = 0.5;
     tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu));
     tf_potse0 = L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
-    tf_potse(1, 1) = tf_potse0;
+    tf_potse(1) = tf_potse0;
     tf_j = nu .* nu .* tf_potse / (alpha * F * L * L * (1 / kappa + 1 / sigma));
-    tf_j(1, 1) = 0.0;
+    tf_j(1) = 0.0;
+
     res0 = 0;
+    D = 0;
 
     if electrode == 'pos'
         tf_j = -tf_j;
-        res0 = -res0;
     end
    
     if any(isnan(tf_j))

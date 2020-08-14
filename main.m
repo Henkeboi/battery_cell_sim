@@ -120,8 +120,8 @@ for i = 1 : size(load_cycle, 1)
     [potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
     potse_pos(i) = potse_pos_Y + potse_pos_X(potse_pos_integrator_index); 
 
-    % [pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
-    % pots_neg(i) = pots_neg_Y;
+    [pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
+    pots_neg(i) = pots_neg_Y;
     if i == 10
         % [A, B, C, D, Ts] = pots_neg_blender.blend_model(SOC_neg);
         % S = ss(A, B, C, D, potse_neg_Ts);
@@ -193,14 +193,14 @@ for i = 1 : size(load_cycle, 1)
 end
 
 disp("Plotting results.")
-f1 = figure;
-plot(time, z_neg);
-hold on;
-plot(time, z_pos, 'r');
-title("SOC")
-xlabel("Time")
-ylabel("SOC")
-grid on;
+% f1 = figure;
+% plot(time, z_neg);
+% hold on;
+% plot(time, z_pos, 'r');
+% title("SOC")
+% xlabel("Time")
+% ylabel("SOC")
+% grid on;
 
 f2 = figure;
 plot(time, cse_neg);
@@ -229,14 +229,14 @@ xlabel("Time")
 ylabel("Potential [V]")
 grid on;
 
-f5 = figure;
-plot(time, pots_neg);
-% hold on;
-% plot(time, pots_pos, 'r');
-title("Pots at the electrodes")
-xlabel("Time")
-ylabel("Potential [V]")
-grid on;
+% f5 = figure;
+% plot(time, pots_neg);
+% % hold on;
+% % plot(time, pots_pos, 'r');
+% title("Pots at the electrodes")
+% xlabel("Time")
+% ylabel("Potential [V]")
+% grid on;
  
 % f6 = figure;
 % plot(time, v);

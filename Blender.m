@@ -12,7 +12,6 @@ classdef Blender < handle
         D_estimates;
         X;
         T;
-        res0;
         ss_size;
         Ts;
     end
@@ -53,9 +52,9 @@ classdef Blender < handle
         function create_models(obj, T_len, sampling_freq, Ts)
             for z = 1 : -obj.SOC_spacing : 0
                 cs = blending_step(obj, z);
-                [tf, obj.res0] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, obj.electrode, obj.const);
-                [A, B, C, D] = dra(tf, obj.res0, sampling_freq, T_len, obj.Ts, obj.const);
-                [A, B, C, D] = multi_dra(A, B, C, D, obj.Ts, obj.res0);
+                [tf, res0, D] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, obj.electrode, obj.const);
+                [A, B, C] = dra(tf, res0, sampling_freq, T_len, obj.Ts, obj.const);
+                [A, B, C] = multi_dra(A, B, C, obj.Ts, res0);
                 obj.A_estimates = [obj.A_estimates A];
                 obj.B_estimates = [obj.B_estimates B];
                 obj.C_estimates = [obj.C_estimates C];

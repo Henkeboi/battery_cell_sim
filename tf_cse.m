@@ -1,4 +1,4 @@
-function [tf_cse, res0] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;
@@ -42,36 +42,21 @@ function [tf_cse, res0] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrod
         error("Bad electrode selection");
     end
 
-    % Calculate nu
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-    z = 0.0; % Temporarly choose z = 0.0
-    % Old
-    res0 = -(3 / Rs) ./ s; 
-    res0(1, 1) = -Rs / (5 * Ds);
-    tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) * Rs .* nu ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(nu) .* (1 - beta .* coth(beta)));
-    tf_cse = tf_cse + res0;
-    tf_cse0 = -Rs / (5 * Ds);
+    z = 0.5;
+    tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu));
+    tf_potse0 = L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
+    tf_potse(1) = tf_potse0;
+    tf_j = nu .* nu .* tf_potse / (alpha * F * L * L * (1 / kappa + 1 / sigma));
+    tf_j(1) = 0.0;
+    tf_cse = Rs / Ds ./ (1 - beta .* coth(beta)) .* tf_j;
+    tf_cse(1) = 0;
+
     res0 = 0;
-
-    % New
-    %tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1)) * Rs .* nu) ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(nu) .* (1 - beta .* coth(beta)));
-
-    %%k = 0.1;
-    %%beta = Rs * sqrt(k / Ds);
-    %%tf_cse0 = (sigma * cosh(k * z) + kappa * cosh(k * (z - 1)) * Rs .* k) ./ (alpha * F * L * A * Ds * (kappa + sigma) * sinh(k) .* (1 - beta .* coth(beta)))
-    %tf_cse0 = 0;
-    %res0 = -1 ./ (eps * A * F * L * s);
-    %D = 0;
-
-    for i = 1 : size(tf_cse, 2)
-        if isnan(tf_cse(1, i)) && s(i, 1) == 0
-            tf_cse(1, i) = tf_cse0;
-        end
-    end
+    D = 0;
 
     if electrode == 'pos'
         tf_cse = -tf_cse;
-        res0 = -res0;
     end
 
     if any(isnan(tf_cse))
