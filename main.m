@@ -115,13 +115,13 @@ for i = 1 : size(load_cycle, 1)
     [j_pos_X, j_pos_Y, j_pos_integrator_index] = j_pos_blender.step(U, SOC_pos);
     j_pos(i) = j_pos_Y;
  
-    [potse_neg_X, potse_neg_Y, potse_neg_integrator_index] = potse_neg_blender.step(U, SOC_neg);
-    potse_neg(i) = potse_neg_Y;
-    [potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
-    potse_pos(i) = potse_pos_Y + potse_pos_X(potse_pos_integrator_index); 
+    %[potse_neg_X, potse_neg_Y, potse_neg_integrator_index] = potse_neg_blender.step(U, SOC_neg);
+    %potse_neg(i) = potse_neg_Y;
+    %[potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
+    %potse_pos(i) = potse_pos_Y + potse_pos_X(potse_pos_integrator_index); 
 
-    [pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
-    pots_neg(i) = pots_neg_Y;
+    %[pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
+    %pots_neg(i) = pots_neg_Y;
     if i == 10
         % [A, B, C, D, Ts] = pots_neg_blender.blend_model(SOC_neg);
         % S = ss(A, B, C, D, potse_neg_Ts);

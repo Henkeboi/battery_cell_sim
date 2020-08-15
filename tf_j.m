@@ -52,7 +52,7 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
     tf_j(1) = 0.0;
 
     res0 = 0;
-    D = 0;
+    D = NaN;
 
     if electrode == 'pos'
         tf_j = -tf_j;

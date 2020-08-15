@@ -45,7 +45,7 @@ function [tf_potse, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, elect
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta)))); 
     z = 0.5;
     tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu));
-    tf_potse0 = L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
+    tf_potse0 = 10e10;%L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
     tf_potse(1) = tf_potse0;
 
     res0 = 0;
