@@ -55,7 +55,11 @@ classdef Blender < handle
                 [tf, res0, D_tf] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, obj.electrode, obj.const);
                 [A, B, C, D_hankel] = dra(tf, res0, sampling_freq, T_len, obj.Ts, obj.const);
                 if isnan(D_tf)
-                    D = D_hankel;
+                    if obj.electrode == 'neg'
+                        D = D_hankel;
+                    else
+                        D = -D_hankel;
+                    end
                 else
                     D = D_tf;
                 end
