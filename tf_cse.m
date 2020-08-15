@@ -44,13 +44,9 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
 
     nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
     z = 0.5;
-    tf_potse = L * (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (A * sigma * kappa * nu .* sinh(nu));
-    tf_potse0 = L * (z * z * (kappa + sigma) / 2 + kappa * (1 / 2 - z));
-    tf_potse(1) = tf_potse0;
-    tf_j = nu .* nu .* tf_potse / (alpha * F * L * L * (1 / kappa + 1 / sigma));
-    tf_j(1) = 0.0;
-    tf_cse = Rs / Ds ./ (1 - beta .* coth(beta)) .* tf_j;
-    tf_cse(1) = 0;
+    tf_cse = (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) * Rs .* nu;
+    tf_cse0 = 0;
+    tf_cse(1) = tf_cse0;
 
     res0 = 0;
     D = 0;
