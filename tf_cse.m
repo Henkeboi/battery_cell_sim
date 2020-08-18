@@ -21,7 +21,7 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
         sigma = const.sigma_eff_neg;
         kappa = const.kappa_eff_neg;
         beta = Rs * sqrt(s / Ds);
-        eps = const.porosity_solid_neg;
+        eps = const.eps_s_neg;
         Uocv_d = calculate_ocv_derivative_neg(cse, const);
     elseif electrode == 'pos'
         Rct = const.R_ct_pos;
@@ -36,7 +36,7 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
         sigma = const.sigma_eff_pos;
         kappa = const.kappa_eff_pos;
         beta = Rs * sqrt(s / Ds);
-        eps = const.porosity_solid_pos;
+        eps = const.eps_s_pos;
         Uocv_d = calculate_ocv_derivative_pos(cse, const);
     else
         error("Bad electrode selection");

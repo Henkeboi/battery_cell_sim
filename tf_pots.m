@@ -40,18 +40,34 @@ function [tf_pots, res0, D] = tf_pots(cse, z_coordinates, T_len, sampling_f, ele
         error("Bad electrode selection");
     end
 
-    z = 0.1;
-    nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-    nu(1, 1) = 1;
-    tf_pots = -L * (kappa * (cosh(nu) - cosh((z - 1) * nu)) + sigma * (1 - cosh(z * nu) + z * nu .* sinh(nu))) ./ (A * sigma * (kappa + sigma) * nu .* sinh(nu));
-    tf_pots0 = L * z * (z / 2 - 1) / (A * sigma);
+    %z = 0.0000000000000001;
+    z = 0.5;
+    nu = calculate_nu(cse, T_len, sampling_f, electrode, const);
+    %nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
+
+    %tf_pots = -L * ((kappa * (cosh(nu) - cosh(nu .* (z - 1)))) + sigma * (1 - cosh(z .* nu) + z .* nu .* sinh(nu))) ./ (A * sigma * (kappa + sigma) .* nu .* sinh(nu));
+    %tf_pots0 = -L * z * (1 - z / 2) / (A * sigma);
+
+    tf_pots = -L*(kappa*(cosh(nu) - cosh((z-1).*nu)) +...
+        sigma*(1-cosh(z.*nu) + z.*nu.*sinh(nu))) ...
+        ./(A*sigma*(kappa + sigma)*...
+        nu.*sinh(nu));
+
+    tf_pots0 = L*(z-2).*z/(2*A*sigma);
     tf_pots(1) = tf_pots0;
 
     res0 = 0;
-    D = -L * z / (A * sigma * (kappa + sigma));
+    D = sigma * z / (A * sigma * (kappa + sigma));
+
+    nu_inf = L * sqrt((alpha/kappa + alpha/sigma)/(Rse));
+    D = -L*(kappa*(cosh(nu_inf) - cosh((z-1).*nu_inf)) +...
+                         sigma*(1-cosh(z.*nu_inf)+z.*nu_inf.*sinh(nu_inf)))...
+                         ./(A*sigma*(kappa + sigma)*...
+                         nu_inf.*sinh(nu_inf));
 
     if electrode == 'pos'
         tf_pots = -tf_pots;
+        D = -D;
     end
 
     if any(isnan(tf_pots))
