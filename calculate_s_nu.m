@@ -1,4 +1,4 @@
-function [nu] = calculate_nu(cse, T_len, sampling_f, electrode, const)
+function [s, nu] = calculate_nu(cse, T_len, sampling_f, electrode, const)
     T = 1 / sampling_f;
     num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
     f_vector = 0 : num_samples - 1;

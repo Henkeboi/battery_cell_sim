@@ -1,11 +1,5 @@
 function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode, const)
-    T = 1 / sampling_f;
-    num_samples = 2 ^ (ceil(log2(sampling_f * T_len)));
-    f_vector = 0 : num_samples - 1;
-    s = zeros(1, size(f_vector, 2));
-    for i = 1 : size(f_vector, 2)
-        s(1, i) = 2j * sampling_f * tan(pi * f_vector(i) / num_samples);
-    end
+    [s, nu] = calculate_s_nu(cse, T_len, sampling_f, electrode, const);
 
     % Declare params
     if electrode == 'neg'
@@ -13,6 +7,7 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
         Rfilm = const.R_film_neg;
         Rse = Rct + Rfilm;
         Rs = const.radius_neg;
+        as = const.as_neg;
         L = const.L_neg;
         F = const.F;
         Ds = const.diffusivity_neg;
@@ -28,6 +23,7 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
         Rfilm = const.R_film_pos;
         Rse = Rct + Rfilm;
         Rs = const.radius_pos;
+        as = const.as_pos;
         L = const.L_pos;
         F = const.F;
         Ds = const.diffusivity_pos;
@@ -42,11 +38,9 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
         error("Bad electrode selection");
     end
 
-    
-    nu = L * sqrt(alpha / sigma + alpha / kappa) ./ sqrt(Rse + Uocv_d / F / Ds * (1 ./ (Rs * beta .* coth(beta))));
-    z = 0.0;
-    tf_j = nu .* (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (alpha * F * L * A * (kappa + sigma) * sinh(nu));
-    tf_j(1) = 1 / (A * F * L * alpha);
+    z = 0.05;
+    tf_j = nu .* (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (as * F * L * A * (kappa + sigma) * sinh(nu));
+    tf_j(1) = 1 / (as * F * L * A);
 
     res0 = 0;
     D = NaN;
