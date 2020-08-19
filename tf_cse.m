@@ -40,7 +40,7 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
         error("Bad electrode selection");
     end
 
-    z = 0.5;
+    z = 0.0000001; % z = 0 not good with current impl.
     nu = L * sqrt(as / sigma + as / kappa) ./ sqrt((Rse + Rs * Uocv_d / (F * Ds)) ./ (1 - beta .* coth(beta)));
     %[M, index] = max(nu);
     %nu_inf = L * sqrt((as / sigma + as / kappa) / Rse);
