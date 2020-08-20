@@ -236,43 +236,43 @@ for i = 1 : size(load_cycle, 1)
     end
 end
 
-disp("Plotting results.")
-f1 = figure;
-plot(time, potse_neg);
-hold on;
-plot(time, potse_pos, 'r');
-title("Potse at the electrodes")
-xlabel("Time")
-ylabel("Potential [V]")
-grid on;
+%disp("Plotting results.")
+%f1 = figure;
+%plot(time, potse_neg);
+%hold on;
+%plot(time, potse_pos, 'r');
+%title("Potse at the electrodes")
+%xlabel("Time")
+%ylabel("Potential [V]")
+%grid on;
 
-f2 = figure;
-plot(time, j_neg);
-hold on;
-plot(time, j_pos, 'r');
-title("Lithium flux at the electrodes")
-xlabel("Time")
-ylabel("Lithium flux [mol / m^2 / s]")
-grid on;
+%f2 = figure;
+%plot(time, j_neg);
+%hold on;
+%plot(time, j_pos, 'r');
+%title("Lithium flux at the electrodes")
+%xlabel("Time")
+%ylabel("Lithium flux [mol / m^2 / s]")
+%grid on;
 
-f3 = figure;
-plot(time, z_neg);
-hold on;
-plot(time, z_pos, 'r');
-title("SOC")
-xlabel("Time")
-ylabel("SOC")
-grid on;
-
-f4 = figure;
-plot(time, cse_neg);
-hold on;
-plot(time, cse_pos, 'r');
-title("Average surface concentration")
-xlabel("Time")
-ylabel("Lithium concentration [mol / m^3]")
-grid on;
-
+%f3 = figure;
+%plot(time, z_neg);
+%hold on;
+%plot(time, z_pos, 'r');
+%title("SOC")
+%xlabel("Time")
+%ylabel("SOC")
+%grid on;
+%
+%f4 = figure;
+%plot(time, cse_neg);
+%hold on;
+%plot(time, cse_pos, 'r');
+%title("Average surface concentration")
+%xlabel("Time")
+%ylabel("Lithium concentration [mol / m^3]")
+%grid on;
+%
 f5 = figure;
 plot(time, pots_neg);
 hold on;
