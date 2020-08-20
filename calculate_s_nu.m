@@ -21,7 +21,8 @@ function [s, nu] = calculate_nu(cse, T_len, sampling_f, electrode, const)
         A = const.A_neg;
         F = const.F;
         beta = Rs * sqrt(s / Ds);
-        Uocv_d = calculate_ocv_derivative_neg(cse, const);
+        cs0 = const.cs0_neg;
+        Uocv_d = calculate_ocv_derivative_neg(cs0, const);
     elseif electrode == 'pos'
         Rct = const.R_ct_pos;
         Rfilm = const.R_film_pos;
@@ -36,7 +37,8 @@ function [s, nu] = calculate_nu(cse, T_len, sampling_f, electrode, const)
         A = const.A_pos;
         F = const.F;
         beta = Rs * sqrt(s / Ds);
-        Uocv_d = calculate_ocv_derivative_pos(cse, const);
+        cs0 = const.cs0_pos;
+        Uocv_d = calculate_ocv_derivative_pos(cs0, const);
     else
         error("Bad electrode selection");
     end

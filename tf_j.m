@@ -38,10 +38,11 @@ function [tf_j, res0, D] = tf_j(cse, z_coordinates, T_len, sampling_f, electrode
         error("Bad electrode selection");
     end
 
-    z = 0.05;
-    tf_j = nu .* (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (as * F * L * A * (kappa + sigma) * sinh(nu));
+    z = 0.4;
+    tf_j = nu .* (sigma * cosh(nu * z) + kappa * cosh(nu * (z - 1))) ./ (as * A * F * L * (kappa + sigma) * sinh(nu));
     tf_j(1) = 1 / (as * F * L * A);
-
+    [row, col] = find(isnan(tf_j));
+    tf_j(row, col) = 0;
     res0 = 0;
     D = NaN;
 

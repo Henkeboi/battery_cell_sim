@@ -3,11 +3,11 @@ disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
-%f = 400;
-%T_len = 10;
-%Ts = 0.1;
+f = 400;
+T_len = 10;
+Ts = 0.1;
 %%for concentration = 5000 : 10000
-%    [tf, res0, D] = tf_cse(14000, [], T_len, f, 'neg', const);
+%    [tf, res0, D] = tf_j(100000*0.3, [], T_len, f, 'pos', const);
 %    [A, B, C, D] = dra(tf, res0, f, T_len, Ts, const);
 %    S = ss(A, B, C, D, Ts);
 %    %if ~isstable(S)
@@ -38,16 +38,16 @@ run('read_load_cycle.m')
 %        time_acc = time(i) + delta_time;
 %    end
 %%end
-%disp("Done")
-%f5 = figure;
-%plot(time, output);
-%% hold on;
-%% plot(time, pots_pos, 'r');
-%title("Pots at the electrodes")
-%xlabel("Time")
-%ylabel("Potential [V]")
-%grid on;
-%return;
+%%disp("Done")
+%%f5 = figure;
+%%plot(time, output);
+%%% hold on;
+%%% plot(time, pots_pos, 'r');
+%%title("Pots at the electrodes")
+%%xlabel("Time")
+%%ylabel("Potential [V]")
+%%grid on;
+%%return;
 
 
 %% Calculations for the negative eletrode at z = 0.
@@ -56,39 +56,39 @@ cs0_pos = const.cs0_pos;
 cs_max_neg = const.solid_max_c_neg;
 cs_max_pos = const.solid_max_c_pos;
 
-%disp("Running blended potse dra.")
-%potse_neg_sampling = 400;
-%potse_neg_T_len = 100;
-%potse_neg_Ts = 0.1;
-%potse_neg_blender = Blender(0.1, @tf_potse, potse_neg_Ts, [0], 'neg', const);
-%potse_neg_blender.create_models(potse_neg_T_len, potse_neg_sampling);
-%potse_neg_blender.sort();
-%
-%potse_pos_sampling = 200;
-%potse_pos_T_len = 10;
-%potse_pos_Ts = 0.5;
-%potse_pos_blender = Blender(0.1, @tf_potse, potse_pos_Ts, [0], 'pos', const);
-%potse_pos_blender.create_models(potse_pos_T_len, potse_pos_sampling);
-%potse_pos_blender.sort();
-%
-%disp("Running blended lithium flux dra.")
-%j_neg_sampling = 200;
-%j_neg_T_len = 10;
-%j_neg_Ts = 0.1;
-%j_neg_blender = Blender(0.1, @tf_j, j_neg_Ts, [0], 'neg', const);
-%j_neg_blender.create_models(j_neg_T_len, j_neg_sampling);
-%j_neg_blender.sort();
-%
-%j_pos_sampling = 200;
-%j_pos_T_len = 10;
-%j_pos_Ts = 0.1;
-%j_pos_blender = Blender(0.1, @tf_j, j_pos_Ts, [0], 'pos', const);
-%j_pos_blender.create_models(j_pos_T_len, j_pos_sampling);
-%j_pos_blender.sort();
+disp("Running blended potse dra.")
+potse_neg_sampling = 400;
+potse_neg_T_len = 100;
+potse_neg_Ts = 0.1;
+potse_neg_blender = Blender(0.1, @tf_potse, potse_neg_Ts, [0], 'neg', const);
+potse_neg_blender.create_models(potse_neg_T_len, potse_neg_sampling);
+potse_neg_blender.sort();
+
+potse_pos_sampling = 200;
+potse_pos_T_len = 10;
+potse_pos_Ts = 0.1;
+potse_pos_blender = Blender(0.1, @tf_potse, potse_pos_Ts, [0], 'pos', const);
+potse_pos_blender.create_models(potse_pos_T_len, potse_pos_sampling);
+potse_pos_blender.sort();
+
+disp("Running blended lithium flux dra.")
+j_neg_sampling = 10000;
+j_neg_T_len = 3;
+j_neg_Ts = 0.1;
+j_neg_blender = Blender(0.1, @tf_j, j_neg_Ts, [0], 'neg', const);
+j_neg_blender.create_models(j_neg_T_len, j_neg_sampling);
+j_neg_blender.sort();
+
+j_pos_sampling = 200;
+j_pos_T_len = 10;
+j_pos_Ts = 0.1;
+j_pos_blender = Blender(0.1, @tf_j, j_pos_Ts, [0], 'pos', const);
+j_pos_blender.create_models(j_pos_T_len, j_pos_sampling);
+j_pos_blender.sort();
 
 disp("Running blended Lithium surface concentration dra.")
 cse_neg_sampling_f = 200;
-cse_neg_T_len = 5;
+cse_neg_T_len = 10;
 cse_neg_Ts = 0.1;
 cse_neg_blender = Blender(0.1, @tf_cse, cse_neg_Ts, [0], 'neg', const);
 cse_neg_blender.create_models(cse_neg_T_len, cse_neg_sampling_f);
@@ -101,20 +101,20 @@ cse_pos_blender = Blender(0.1, @tf_cse, cse_pos_Ts, [0], 'pos', const);
 cse_pos_blender.create_models(cse_pos_T_len, cse_pos_sampling_f);
 cse_pos_blender.sort();
  
-%disp("Running blended pots dra.")
-%pots_neg_sampling = 300;
-%pots_neg_T_len = 10;
-%potse_neg_Ts = 0.1;
-%pots_neg_blender = Blender(0.1, @tf_pots, potse_neg_Ts, [0], 'neg', const);
-%pots_neg_blender.create_models(pots_neg_T_len, pots_neg_sampling);
-%pots_neg_blender.sort();
+disp("Running blended pots dra.")
+pots_neg_sampling = 300;
+pots_neg_T_len = 10;
+potse_neg_Ts = 0.1;
+pots_neg_blender = Blender(0.1, @tf_pots, potse_neg_Ts, [0], 'neg', const);
+pots_neg_blender.create_models(pots_neg_T_len, pots_neg_sampling);
+pots_neg_blender.sort();
 
-%pots_pos_sampling = 400;
-%pots_pos_T_len = 10;
-%potse_pos_Ts = 0.1;
-%pots_pos_blender = Blender(0.1, @tf_pots, potse_pos_Ts, [0], 'pos', const);
-%pots_pos_blender.create_models(pots_pos_T_len, pots_pos_sampling);
-%pots_pos_blender.sort();
+pots_pos_sampling = 200;
+pots_pos_T_len = 10;
+potse_pos_Ts = 0.1;
+pots_pos_blender = Blender(0.1, @tf_pots, potse_pos_Ts, [0], 'pos', const);
+pots_pos_blender.create_models(pots_pos_T_len, pots_pos_sampling);
+pots_pos_blender.sort();
 
 disp("Simulating.")
 z_neg = zeros(size(load_cycle, 1), 1);
@@ -154,16 +154,16 @@ for i = 1 : size(load_cycle, 1)
     cs_avg_pos = cs0_pos + cse_pos_X(cse_pos_integrator_index);
 
     % Potse
-    %[potse_neg_X, potse_neg_Y, potse_neg_integrator_index] = potse_neg_blender.step(U, SOC_neg);
-    %potse_neg(i) = potse_neg_Y;
-    %[potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
-    %potse_pos(i) = potse_pos_Y + potse_pos_X(potse_pos_integrator_index); 
+    [potse_neg_X, potse_neg_Y, potse_neg_integrator_index] = potse_neg_blender.step(U, SOC_neg);
+    potse_neg(i) = potse_neg_Y;
+    [potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
+    potse_pos(i) = potse_pos_Y + potse_pos_X(potse_pos_integrator_index); 
 
     % j
-    %[j_neg_X, j_neg_Y, j_neg_integrator_index] = j_neg_blender.step(U, SOC_neg);
-    %j_neg(i) = j_neg_Y;
-    %[j_pos_X, j_pos_Y, j_pos_integrator_index] = j_pos_blender.step(U, SOC_pos);
-    %j_pos(i) = j_pos_Y;
+    [j_neg_X, j_neg_Y, j_neg_integrator_index] = j_neg_blender.step(U, SOC_neg);
+    j_neg(i) = j_neg_Y;
+    [j_pos_X, j_pos_Y, j_pos_integrator_index] = j_pos_blender.step(U, SOC_pos);
+    j_pos(i) = j_pos_Y;
 
     % if i == 1
     %     [A, B, C, D, Ts] = pots_neg_blender.blend_model(SOC_neg);
@@ -179,10 +179,10 @@ for i = 1 : size(load_cycle, 1)
     %     return
     % end
 
-    %[pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
-    %pots_neg(i) = pots_neg_Y;
-    %[pots_pos_X, pots_pos_Y, pots_pos_integrator_index] = pots_pos_blender.step(U, SOC_pos);
-    %pots_pos(i) = pots_pos_Y + pots_pos_X(pots_pos_integrator_index); 
+    [pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
+    pots_neg(i) = pots_neg_Y;
+    [pots_pos_X, pots_pos_Y, pots_pos_integrator_index] = pots_pos_blender.step(U, SOC_pos);
+    pots_pos(i) = pots_pos_Y + pots_pos_X(pots_pos_integrator_index); 
 
     %pote1 = 0.0000001;
     %pote2 = 0.0000001;
@@ -215,7 +215,7 @@ for i = 1 : size(load_cycle, 1)
         break;
     end
     if isnan(j_pos(i))
-        disp("NAN j_neg")
+        disp("NAN j_pos")
         break;
     end
     if isnan(potse_neg(i))
@@ -236,24 +236,24 @@ for i = 1 : size(load_cycle, 1)
     end
 end
 
-%disp("Plotting results.")
-%f1 = figure;
-%plot(time, potse_neg);
-%hold on;
-%plot(time, potse_pos, 'r');
-%title("Potse at the electrodes")
-%xlabel("Time")
-%ylabel("Potential [V]")
-%grid on;
+disp("Plotting results.")
+f1 = figure;
+plot(time, potse_neg);
+hold on;
+plot(time, potse_pos, 'r');
+title("Potse at the electrodes")
+xlabel("Time")
+ylabel("Potential [V]")
+grid on;
 
-%f2 = figure;
-%plot(time, j_neg);
-%hold on;
-%plot(time, j_pos, 'r');
-%title("Lithium flux at the electrodes")
-%xlabel("Time")
-%ylabel("Lithium flux [mol / m^2 / s]")
-%grid on;
+f2 = figure;
+plot(time, j_neg);
+hold on;
+plot(time, j_pos, 'r');
+title("Lithium flux at the electrodes")
+xlabel("Time")
+ylabel("Lithium flux [mol / m^2 / s]")
+grid on;
 
 f3 = figure;
 plot(time, z_neg);
@@ -273,14 +273,14 @@ xlabel("Time")
 ylabel("Lithium concentration [mol / m^3]")
 grid on;
 
-%f5 = figure;
-%plot(time, pots_neg);
-%% hold on;
-%% plot(time, pots_pos, 'r');
-%title("Pots at the electrodes")
-%xlabel("Time")
-%ylabel("Potential [V]")
-%grid on;
+f5 = figure;
+plot(time, pots_neg);
+hold on;
+plot(time, pots_pos, 'r');
+title("Pots at the electrodes")
+xlabel("Time")
+ylabel("Potential [V]")
+grid on;
 
 %f6 = figure;
 %plot(time, v);
