@@ -1,4 +1,4 @@
-function [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d] = get_electrode_constants(s, electrode, const)
+function [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d, transfer_number] = get_electrode_constants(s, electrode, const)
     if electrode == 'neg'
         Rct = const.R_ct_neg;
         Rfilm = const.R_film_neg;
@@ -16,6 +16,7 @@ function [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, 
         eps = const.eps_s_neg;
         cs0 = const.cs0_neg;
         Uocv_d = calculate_ocv_derivative_neg(cs0, const);
+        transfer_number = const.transfer_number_neg;
     elseif electrode == 'pos'
         Rct = const.R_ct_pos;
         Rfilm = const.R_film_pos;
@@ -33,6 +34,7 @@ function [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, 
         eps = const.eps_s_pos;
         cs0 = const.cs0_pos;
         Uocv_d = calculate_ocv_derivative_pos(cs0, const);
+        transfer_number = const.transfer_number_pos;
     else
         error("Bad electrode selection");
     end

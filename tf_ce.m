@@ -1,4 +1,53 @@
-function [] = tf_ce(cse, x_coordinates, T_len, sampling_f, const)
+function [] = tf_ce(M, const)
+    L_n = const.L_neg;
+    L_p = const.L_pos;
+    L_s = const.L_sep;
+    L_tot = L_n + L_s + L_p;
+    eps_e_n = const.eps_e_neg;
+    eps_e_s = const.eps_e_sep;
+    eps_e_p = const.eps_e_pos;
+    De_n = const.Deeff_neg;
+    De_s = const.Deeff_sep;
+    De_p = const.Deeff_pos;
+
+    syms x lambda k1
+    syms w1 w2 k3 k4 k5 k6;
+
+    %[k3, k4, k5, k6, k5_simple, k6_simple, eq5] = calculate_constants(k1, const); 
+    load('data/constants.mat');
+    [lambda_list] = calculate_lambdas(k3, k4, k5, k6, k5_simple, k6_simple, M, const);
+    load('data/lambda_list.mat');
+    eval_constants(lambda_list, eq5, lambda, k1, k3, k4, k5, k6);
+    load('data/constants_eval.mat');
+    
+    fun_eps = @(x) eps_e_n .* ((0 <= x) & (x < L_n)) + eps_e_s .* ((L_n <= x) & (x < L_n + L_s)) + eps_e_p .* ((L_n + L_s <= x) & (x <= L_tot));
+    for n = 1 : size(lambda_list, 2)
+        lambda = lambda_list(1, i)
+        k1 = k1_list(1, i);
+        k3 = k3_list(1, i)
+        k4 = k4_list(1, i);
+        k5 = k5_list(1, i);
+        k6 = k6_list(1, i);
+
+        calculate_jn(lambda, k1, 'neg', const);
+
+        fun_phi_neg = @(x) k1 .* cos(sqrt(lambda .* fun_eps(x) ./ De_n) .* x) .* ((0 <= x) & (x < L_n));
+        fun_phi_sep = @(x) ((k3 .* cos(sqrt(lambda .* fun_eps(x) ./ De_s) .* x) + k4 .* sin(sqrt(lambda .* fun_eps(x) ./ De_s) .* x))) .* ((L_n <= x) & (x < L_n + L_s)); 
+        fun_phi_pos = @(x) ((k5 .* cos(sqrt(lambda .* fun_eps(x) ./ De_p) .* x) + k6 .* sin(sqrt(lambda .* fun_eps(x) ./ De_p) .* x)) .* ((L_n + L_s <= x) & (x <= L_tot)));
+
+        phi_n = @(x) fun_phi_neg(x) + fun_phi_sep(x) + fun_phi_pos(x);
+    end
+   
+    %step_size = 10e-10;
+    %x_vector = 0 : step_size : L_tot;
+    %y_vector = [];
+    %for i = 1 : size(x_vector, 2)
+    %    y_vector = [y_vector sum(phi(x_vector(i)))];
+    %end
+    %plot(x_vector, y_vector);
+end
+
+function [k3, k4, k5, k6, k5_simple, k6_simple, eq5] = calculate_constants(k1, const)
     L_n = const.L_neg;
     L_p = const.L_pos;
     L_s = const.L_sep;
@@ -38,15 +87,15 @@ function [] = tf_ce(cse, x_coordinates, T_len, sampling_f, const)
     fun_phi_p = @(x, lambda, k5, k6) ((k5 .* cos(sqrt(lambda .* fun_eps(x) ./ De_p) .* x) + k6 .* sin(sqrt(lambda .* fun_eps(x) ./ De_p) .* x)) .* ((L_n + L_s <= x) & (x <= L_tot)));
 
     disp("Calculating PHI neg.")
-    step_size = L_n / 20;
+    step_size = L_n / 50;
     xn_vector = 0 : step_size : L_n;
     PHI_n = @(x, lambda, k1) trapz(xn_vector, fun_phi_n(xn_vector, lambda, k1) .^ 2 .* fun_eps(xn_vector) .* (0 <= x & x <= L_n));
     disp("Calculating PHI sep.")
-    step_size = L_s / 20;
+    step_size = L_s / 50;
     xs_vector = L_n : step_size : L_n + L_s;
     PHI_s = @(x, lambda, k3, k4) trapz(xs_vector, fun_phi_s(xs_vector, lambda, k3, k4) .^ 2 .* fun_eps(xs_vector) .* (L_n <= x & x <= L_n + L_s));
     disp("Calculate PHI pos.")
-    step_size = L_p / 20;
+    step_size = L_p / 50;
     xp_vector = L_n + L_s : step_size : L_tot;
     PHI_p = @(x, lambda, k5, k6) trapz(xp_vector, fun_phi_p(xp_vector, lambda, k5, k6) .^ 2 .* fun_eps(xp_vector) .* (L_n + L_s <= x <= L_tot)); 
 
@@ -62,7 +111,26 @@ function [] = tf_ce(cse, x_coordinates, T_len, sampling_f, const)
     k5_simple = simplify(subs(k5, k1, rhs(eq5)));
     k6_simple = simplify(subs(k6, k1, rhs(eq5)));
 
+    disp("Save variables.")
+    save('data/constants.mat', 'k3', 'k4', 'k5', 'k6', 'k5_simple', 'k6_simple', 'eq5');
+end
+
+function [lambda_list] = calculate_lambdas(k3, k4, k5, k6, k5_simple, k6_simple, M, const)
     disp("Calculate lambdas.");
+    L_n = const.L_neg;
+    L_p = const.L_pos;
+    L_s = const.L_sep;
+    L_tot = L_n + L_s + L_p;
+    eps_e_n = const.eps_e_neg;
+    eps_e_s = const.eps_e_sep;
+    eps_e_p = const.eps_e_pos;
+    De_n = const.Deeff_neg;
+    De_s = const.Deeff_sep;
+    De_p = const.Deeff_pos;
+
+    syms x lambda k1
+
+    fun_eps = @(x) eps_e_n .* ((0 <= x) & (x < L_n)) + eps_e_s .* ((L_n <= x) & (x < L_n + L_s)) + eps_e_p .* ((L_n + L_s <= x) & (x <= L_tot));
     phi = @(x, L) eval(subs(rhs(eq5), lambda, L)) .* cos(sqrt(L .* fun_eps(x) ./ De_n) .* x) .* ((0 <= x) & (x < L_n)) ...
         + (eval(subs(k3, lambda, L)) .* cos(sqrt(L .* fun_eps(x) ./ De_s) .* x) ...
         + eval(subs(k4, lambda, L)) .* sin(sqrt(L .* fun_eps(x) ./ De_s) .* x)) .* ((L_n <= x) & (x < L_n + L_s)) ...
@@ -72,52 +140,100 @@ function [] = tf_ce(cse, x_coordinates, T_len, sampling_f, const)
         + eval(subs(k6_simple, lambda, L)) .* sin(sqrt(L .* fun_eps(x) ./ De_p) .* x)) .* ((L_n + L_s <= x) & (x <= L_tot));
 
     lambda_list = [];
-    l = 1;
-    step = 0.3;
-    h = L_p / 1000;
-    a = (phi_p(L_tot - h, l) - phi(L_tot, l)) / h;
-    b = (phi_p(L_tot - h, l + step) - phi(L_tot, l + step)) / h;
-    c = phi_p(L_tot - h, (l + step) / 2) / h;
-    while abs(c) > 10e-5
-        if c > 0
-            a = c;
-            l = l + step / 2;
-        else
-            b = c;
-            step = step / 2;
-        end
-        c = phi_p(L_tot - h, (l + step) / 2) / h;
-    end
-    disp(l)
-    lambda_list = [lambda_list l];
-
-    disp("Calculate constants.")
+    h = L_p / 10e5;
+    l_b = 0.01;
     i = 1;
-    k1_list = [];
-    k3_list = [];
-    k4_list = [];
-    k5_list = [];
-    k6_list = [];
+    while i < M
+        l_a = l_b;
+        step_a = 0.01;
+        a = (phi_p(L_tot - h, l_a) - phi_p(L_tot, l_a)) / h;
+        while a < 0
+            a = (phi_p(L_tot - h, l_a + step_a) - phi_p(L_tot, l_a + step_a)) / h;
+            l_a = l_a + step_a;
+        end
 
-    k1_list = [k1_list eval(subs(rhs(eq5), lambda, lambda_list(i)))];
-    k3_list = [k3_list eval(subs(k3, lambda, lambda_list(i)))];
-    k4_list = [k4_list eval(subs(k4, lambda, lambda_list(i)))];
-    k5_list = [k5_list eval(subs(k5, lambda, lambda_list(i)))]; 
-    k6_list = [k6_list eval(subs(k6, lambda, lambda_list(i)))]; 
-    a = trapz(xn_vector, fun_phi_n(xn_vector, lambda_list(i), k1_list(i)) .^ 2 .* fun_eps(xn_vector));
-    b = trapz(xs_vector, fun_phi_s(xs_vector, lambda_list(i), k3_list(i), k4_list(i)) .^ 2 .* fun_eps(xs_vector)); 
-    c = trapz(xp_vector, fun_phi_p(xp_vector, lambda_list(i), k5_list(i), k6_list(i)) .^ 2 .* fun_eps(xp_vector)); 
-    sl_criteria = a + b + c;
-    disp(a + b + c)
-    PHI_n(xn_vector, lambda_list(i), k1_list(i)) + PHI_s(xs_vector, lambda_list(i), k3_list(i), k4_list(i)) + PHI_p(xp_vector, lambda_list(i), k5_list(i), k6_list(i)) 
-    
+        step_b = 0.1;
+        l_b = l_a + step_b;
+        b = (phi_p(L_tot - h, l_b) - phi_p(L_tot, l_b)) / h;
+        while b > 0
+            b = (phi_p(L_tot - h, l_b +  step_b) - phi_p(L_tot, l_b + step_b)) / h;
+            l_b = l_b + step_b;
+        end 
 
-    %phi = @(x) fun_phi_n(x, lambda_list, k1_list) + fun_phi_s(x, lambda_list, k3_list, k4_list) + fun_phi_p(x, lambda_list, k5_list, k6_list);
-    %step_size = 10e-10;
-    %x_vector = 0 : step_size : L_tot;
-    %y_vector = [];
-    %for i = 1 : size(x_vector, 2)
-    %    y_vector = [y_vector sum(phi(x_vector(i)))];
-    %end
-    %plot(x_vector, y_vector);
+        l_c = l_a + (l_b - l_a) / 2;
+        c = phi_p(L_tot - h, l_c) / h;
+        last_l_c = 0;
+        skip = false;
+        tol = 10e-4;
+        while abs(c) > tol && ~skip
+            disp(c)
+            if c > 0
+                a = c;
+                l_a = l_c;
+            else
+                b = c;
+                l_b = l_c;
+            end
+            last_l_c = l_c;
+            l_c = l_a + (l_b - l_a) / 2;
+            c = phi_p(L_tot - h, l_c) / h;
+            if l_c == last_l_c
+                step_a = step_a * 10;
+                skip = true;
+            end
+        end
+        if ~skip
+            lambda_list = [lambda_list l_c];
+            i = i + 1;
+        end
+        l_b = l_b + step_a;
+    end
+    save('data/lambda_list.mat', 'lambda_list')
+end
+
+function [k1_list, k3_list, k4_list, k5_list, k6_list] = eval_constants(lambda_list, eq5, lambda, k1, k3, k4, k5, k6) 
+    for i = 1 : size(lambda_list, 2)
+        disp(i)
+        k1_list = [];
+        k3_list = [];
+        k4_list = [];
+        k5_list = [];
+        k6_list = [];
+
+        k1_list = [k1_list eval(subs(rhs(eq5), lambda, lambda_list(i)))];
+        k3_list = [k3_list eval(subs(k3, lambda, lambda_list(i)))];
+        k4_list = [k4_list eval(subs(k4, lambda, lambda_list(i)))];
+        k5_list = [k5_list eval(subs(k5, lambda, lambda_list(i)))]; 
+        k6_list = [k6_list eval(subs(k6, lambda, lambda_list(i)))]; 
+        %sl_criteria = PHI_n(xn_vector, lambda_list(i), k1_list(i)) + PHI_s(xs_vector, lambda_list(i), k3_list(i), k4_list(i)) + PHI_p(xp_vector, lambda_list(i), k5_list(i), k6_list(i));
+        %if sl_criteria > 1.01 or sl_criteria < 0.99
+        %    disp("SL_criteria not satisfied.")
+        %end
+    end
+    save('data/constants_eval.mat', 'k1_list', 'k3_list', 'k4_list', 'k5_list', 'k6_list');
+end
+
+
+function [s, jn] = calculate_jn(lambda_n, k1, electrode, const)
+    [s, nu] = calculate_s_nu(cse, T_len, sampling_f, electrode, const);
+    [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d, transfer_number] = get_electrode_constants(s, electrode, const);
+    eps_e_n = const.eps_e_neg;
+    eps_e_s = const.eps_e_sep;
+    eps_e_p = const.eps_e_pos;
+    De_n = const.Deeff_neg;
+    De_s = const.Deeff_sep;
+    De_p = const.Deeff_pos;
+    L_n = const.L_neg;
+    L_p = const.L_pos;
+    L_s = const.L_sep;
+    L_tot = L_n + L_s + L_p;
+
+    if electrode == 'neg'
+        w_n_neg = L * sqrt(lambda_n * eps_e_n / De_n);
+        j_n = (k1 * (1 - transfer_number) * w_n_neg * sin(w_n_neg) * (kappa + sigma .* cosh(nu)) .* nu + k1 * (1 - transfer_number) * (kappa + sigma * cosh(w_n_neg)) .* nu .* nu) ./ (A .* F .* (kappa + sigma) .* (w_n_neg * w_n_neg + nu));
+    else
+        w_n_pos = L * sqrt(lambda_n * eps_e_p / De_p);
+        w_n_tot = L_tot * sqrt(lambda_n * eps_e_p / De_p);
+
+    end
 end

@@ -1,6 +1,6 @@
 function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
     [s, nu] = calculate_s_nu(cse, T_len, sampling_f, electrode, const);
-    [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d] = get_electrode_constants(s, electrode, const);
+    [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d, transfer_number] = get_electrode_constants(s, electrode, const);
 
     z = 0.0000001; % z = 0 not good with current impl.
     nu = L * sqrt(as / sigma + as / kappa) ./ sqrt((Rse + Rs * Uocv_d / (F * Ds)) ./ (1 - beta .* coth(beta)));

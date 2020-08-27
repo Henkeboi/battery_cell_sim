@@ -4,11 +4,7 @@ run('parameters.m');
 run('read_load_cycle.m')
 
 
-f = 400;
-T_len = 10;
-Ts = 0.1;
-tf_ce(100000*0.3, [1], T_len, f, const);
-return
+tf_ce(10, const);
 
 %%for concentration = 5000 : 10000
 %    [tf, res0, D] = tf_j(100000*0.3, [], T_len, f, 'pos', const);
