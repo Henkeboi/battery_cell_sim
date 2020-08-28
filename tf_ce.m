@@ -1,4 +1,4 @@
-function [] = tf_ce(M, const)
+function [ce] = tf_ce(x_location, cse, freq, T_len, M, const)
     L_n = const.L_neg;
     L_p = const.L_pos;
     L_s = const.L_sep;
@@ -15,28 +15,39 @@ function [] = tf_ce(M, const)
 
     %[k3, k4, k5, k6, k5_simple, k6_simple, eq5] = calculate_constants(k1, const); 
     load('data/constants.mat');
-    [lambda_list] = calculate_lambdas(k3, k4, k5, k6, k5_simple, k6_simple, M, const);
+    %[lambda_list] = calculate_lambdas(k3, k4, k5, k6, k5_simple, k6_simple, M, const);
     load('data/lambda_list.mat');
-    eval_constants(lambda_list, eq5, lambda, k1, k3, k4, k5, k6);
+    %[k1_list, k3_list, k4_list, k5_list, k6_list] = eval_constants(lambda_list, eq5, lambda, k1, k3, k4, k5, k6);
     load('data/constants_eval.mat');
     
     fun_eps = @(x) eps_e_n .* ((0 <= x) & (x < L_n)) + eps_e_s .* ((L_n <= x) & (x < L_n + L_s)) + eps_e_p .* ((L_n + L_s <= x) & (x <= L_tot));
-    for n = 1 : size(lambda_list, 2)
-        lambda = lambda_list(1, i)
+    tf_ce_list = [];
+    phi_list = [];
+    for i = 1 : size(lambda_list, 2)
+        lambda = lambda_list(1, i);
         k1 = k1_list(1, i);
-        k3 = k3_list(1, i)
+        k3 = k3_list(1, i);
         k4 = k4_list(1, i);
         k5 = k5_list(1, i);
         k6 = k6_list(1, i);
 
-        calculate_jn(lambda, k1, 'neg', const);
+        [s, j_n_neg] = calculate_jn(cse, freq, T_len, lambda, k1, k5, k6, 'neg', const);
+        [s, j_n_pos] = calculate_jn(cse, freq, T_len, lambda, k1, k5, k6, 'pos', const);
+        tf_ce_list = [tf_ce_list; (j_n_neg + j_n_pos) ./ (s + lambda)];
 
         fun_phi_neg = @(x) k1 .* cos(sqrt(lambda .* fun_eps(x) ./ De_n) .* x) .* ((0 <= x) & (x < L_n));
         fun_phi_sep = @(x) ((k3 .* cos(sqrt(lambda .* fun_eps(x) ./ De_s) .* x) + k4 .* sin(sqrt(lambda .* fun_eps(x) ./ De_s) .* x))) .* ((L_n <= x) & (x < L_n + L_s)); 
         fun_phi_pos = @(x) ((k5 .* cos(sqrt(lambda .* fun_eps(x) ./ De_p) .* x) + k6 .* sin(sqrt(lambda .* fun_eps(x) ./ De_p) .* x)) .* ((L_n + L_s <= x) & (x <= L_tot)));
-
         phi_n = @(x) fun_phi_neg(x) + fun_phi_sep(x) + fun_phi_pos(x);
+        phi_list{i} = phi_n;
     end
+
+    %for i = 1 : size(tf_ce_list, 1)
+    %    for j = 1 : size(tf_ce_list, 2)
+    %        if isnan(tf_ce_list(i, j))
+    %        end
+    %    end
+    %end
    
     %step_size = 10e-10;
     %x_vector = 0 : step_size : L_tot;
@@ -192,14 +203,14 @@ function [lambda_list] = calculate_lambdas(k3, k4, k5, k6, k5_simple, k6_simple,
 end
 
 function [k1_list, k3_list, k4_list, k5_list, k6_list] = eval_constants(lambda_list, eq5, lambda, k1, k3, k4, k5, k6) 
+    k1_list = [];
+    k3_list = [];
+    k4_list = [];
+    k5_list = [];
+    k6_list = [];
+
     for i = 1 : size(lambda_list, 2)
         disp(i)
-        k1_list = [];
-        k3_list = [];
-        k4_list = [];
-        k5_list = [];
-        k6_list = [];
-
         k1_list = [k1_list eval(subs(rhs(eq5), lambda, lambda_list(i)))];
         k3_list = [k3_list eval(subs(k3, lambda, lambda_list(i)))];
         k4_list = [k4_list eval(subs(k4, lambda, lambda_list(i)))];
@@ -213,10 +224,7 @@ function [k1_list, k3_list, k4_list, k5_list, k6_list] = eval_constants(lambda_l
     save('data/constants_eval.mat', 'k1_list', 'k3_list', 'k4_list', 'k5_list', 'k6_list');
 end
 
-
-function [s, jn] = calculate_jn(lambda_n, k1, electrode, const)
-    [s, nu] = calculate_s_nu(cse, T_len, sampling_f, electrode, const);
-    [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d, transfer_number] = get_electrode_constants(s, electrode, const);
+function [s, j_n] = calculate_jn(cse, sampling_f, T_len, lambda_n, k1, k5, k6, electrode, const)
     eps_e_n = const.eps_e_neg;
     eps_e_s = const.eps_e_sep;
     eps_e_p = const.eps_e_pos;
@@ -228,12 +236,39 @@ function [s, jn] = calculate_jn(lambda_n, k1, electrode, const)
     L_s = const.L_sep;
     L_tot = L_n + L_s + L_p;
 
+    [s, nu] = calculate_s_nu(cse, T_len, sampling_f, electrode, const);
+    [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d, transfer_number] = get_electrode_constants(s, electrode, const);
+    
     if electrode == 'neg'
         w_n_neg = L * sqrt(lambda_n * eps_e_n / De_n);
-        j_n = (k1 * (1 - transfer_number) * w_n_neg * sin(w_n_neg) * (kappa + sigma .* cosh(nu)) .* nu + k1 * (1 - transfer_number) * (kappa + sigma * cosh(w_n_neg)) .* nu .* nu) ./ (A .* F .* (kappa + sigma) .* (w_n_neg * w_n_neg + nu));
-    else
+        j_n = k1 * (1 - transfer_number) * w_n_neg * sin(w_n_neg) * (kappa + sigma .* cosh(nu)) .* nu ./ (A * F * (kappa + sigma) * (w_n_neg * w_n_neg + nu .* nu) .* sinh(nu)) + k1 * (1 - transfer_number) * (kappa + sigma * cos(w_n_neg)) * nu .* nu ./ (A * F * (kappa + sigma) * (w_n_neg * w_n_neg + nu .* nu));
+        j_n(1, 1) = k1 * (1 - transfer_number) / (A * F * w_n_neg);
+    elseif electrode == 'pos'
         w_n_pos = L * sqrt(lambda_n * eps_e_p / De_p);
         w_n_tot = L_tot * sqrt(lambda_n * eps_e_p / De_p);
+        w_n_sep = w_n_tot - w_n_pos;
+        delta = (1 + exp(-2 * nu)) ./ (1 - exp(-2 *nu));
 
+        j_n = ((k5 * (1 - transfer_number) * w_n_pos * sin(w_n_sep) .* ((kappa ./ sinh(nu))+ sigma .* delta) .* nu) ...
+            - (k5 * (1 - transfer_number) * w_n_pos * sin(w_n_tot) .* (sigma ./ sinh(nu) + kappa .* delta) .* nu) ...
+            - k5 * (1 - transfer_number) * (sigma * cos(w_n_sep) + kappa * cos(w_n_tot)) .* nu .* nu ...
+            + k6 * (1 - transfer_number) * w_n_pos * cos(w_n_tot) * (sigma ./ sinh(nu) + kappa .* delta) .* nu ...
+            - k6 * (1 - transfer_number) * w_n_pos * cos(w_n_sep) * (kappa ./ sinh(nu) + sigma .* delta) .* nu ...
+            - k6 * (1 - transfer_number) * (sigma * sin(w_n_sep) + kappa * sin(w_n_tot)) .* nu .* nu) ...
+            ./ (A * F * (kappa + sigma) .* (w_n_pos * w_n_pos + nu .* nu));
+    
+        nu0 = nu(1, 1);
+        j_n(1, 1) = k5 * (1 - transfer_number) * w_n_pos * sin(w_n_sep) .* (kappa + sigma .* cosh(nu0)) .* nu0 / (A * F * (kappa + sigma) .* (w_n_pos * w_n_pos + nu0 .* nu0)) ...
+                    - k5 * (1 - transfer_number) * w_n_pos * sin(w_n_tot) * (sigma + kappa) / (A * F * (kappa + sigma) * w_n_pos * w_n_pos) ...
+                    - k5 * (1 - transfer_number) * (sigma * cos(w_n_sep) + kappa * cos(w_n_tot)) .* nu0 .* nu0 ./ (A * F * (kappa + sigma) * (w_n_pos * w_n_pos + nu0 * nu0)) ...
+                    + k6 * (1 - transfer_number) * w_n_pos * cos(w_n_tot) * (sigma + kappa) / (A * F * (kappa + sigma) * w_n_pos * w_n_pos) ...
+                    - k6 * (1 - transfer_number) * w_n_pos * cos(w_n_sep) * (kappa + sigma) / (A * F * (kappa + sigma) * w_n_pos * w_n_pos) ...
+                    - k6 * (1 - transfer_number) * (sigma * sin(w_n_sep) + kappa * sin(w_n_tot)) .* nu0 .* nu0;
+    else
+        error("Bad electrode selection.")
+    end
+
+    if any(isnan(j_n))
+        error("NaN in j_n");
     end
 end

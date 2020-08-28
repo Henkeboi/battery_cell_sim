@@ -3,8 +3,12 @@ disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
-
-tf_ce(10, const);
+f = 200;
+T_len = 1;
+potse_neg_Ts = 0.1;
+tf_ce(const.L_neg - const.L_sep, 100000*0.3, f, T_len, 10, const);
+%tf_ce(const.L_pos + const.L_neg, 100000*0.3, f, T_len, 10, const);
+return;
 
 %%for concentration = 5000 : 10000
 %    [tf, res0, D] = tf_j(100000*0.3, [], T_len, f, 'pos', const);
