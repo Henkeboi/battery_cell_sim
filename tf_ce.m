@@ -1,4 +1,4 @@
-function [ce] = tf_ce(x_location, cse, freq, T_len, M, const)
+function [tf_ce, res0, D] = tf_ce(cse, x_location, T_len, freq, M, const)
     L_n = const.L_neg;
     L_p = const.L_pos;
     L_s = const.L_sep;
@@ -20,9 +20,8 @@ function [ce] = tf_ce(x_location, cse, freq, T_len, M, const)
     %[k1_list, k3_list, k4_list, k5_list, k6_list] = eval_constants(lambda_list, eq5, lambda, k1, k3, k4, k5, k6);
     load('data/constants_eval.mat');
     
+    tf_ce = 0;
     fun_eps = @(x) eps_e_n .* ((0 <= x) & (x < L_n)) + eps_e_s .* ((L_n <= x) & (x < L_n + L_s)) + eps_e_p .* ((L_n + L_s <= x) & (x <= L_tot));
-    tf_ce_list = [];
-    phi_list = [];
     for i = 1 : size(lambda_list, 2)
         lambda = lambda_list(1, i);
         k1 = k1_list(1, i);
@@ -33,29 +32,22 @@ function [ce] = tf_ce(x_location, cse, freq, T_len, M, const)
 
         [s, j_n_neg] = calculate_jn(cse, freq, T_len, lambda, k1, k5, k6, 'neg', const);
         [s, j_n_pos] = calculate_jn(cse, freq, T_len, lambda, k1, k5, k6, 'pos', const);
-        tf_ce_list = [tf_ce_list; (j_n_neg + j_n_pos) ./ (s + lambda)];
+        tf_ce_n = (j_n_neg + j_n_pos) ./ (s + lambda);
 
         fun_phi_neg = @(x) k1 .* cos(sqrt(lambda .* fun_eps(x) ./ De_n) .* x) .* ((0 <= x) & (x < L_n));
         fun_phi_sep = @(x) ((k3 .* cos(sqrt(lambda .* fun_eps(x) ./ De_s) .* x) + k4 .* sin(sqrt(lambda .* fun_eps(x) ./ De_s) .* x))) .* ((L_n <= x) & (x < L_n + L_s)); 
         fun_phi_pos = @(x) ((k5 .* cos(sqrt(lambda .* fun_eps(x) ./ De_p) .* x) + k6 .* sin(sqrt(lambda .* fun_eps(x) ./ De_p) .* x)) .* ((L_n + L_s <= x) & (x <= L_tot)));
         phi_n = @(x) fun_phi_neg(x) + fun_phi_sep(x) + fun_phi_pos(x);
-        phi_list{i} = phi_n;
+         
+        tf_ce = tf_ce + tf_ce_n  * phi_n(x_location);
     end
+    
+    res0 = 0;
+    D = NaN;
 
-    %for i = 1 : size(tf_ce_list, 1)
-    %    for j = 1 : size(tf_ce_list, 2)
-    %        if isnan(tf_ce_list(i, j))
-    %        end
-    %    end
-    %end
-   
-    %step_size = 10e-10;
-    %x_vector = 0 : step_size : L_tot;
-    %y_vector = [];
-    %for i = 1 : size(x_vector, 2)
-    %    y_vector = [y_vector sum(phi(x_vector(i)))];
-    %end
-    %plot(x_vector, y_vector);
+    if any(isnan(tf_ce))
+        error("NAN in tf_ce");
+    end
 end
 
 function [k3, k4, k5, k6, k5_simple, k6_simple, eq5] = calculate_constants(k1, const)

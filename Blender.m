@@ -5,7 +5,7 @@ classdef Blender < handle
         SOC_spacing {mustBeNumeric}
         SOC_lut
         transfer_function
-        z_coordinates
+        coordinate
         A_estimates;
         B_estimates;
         C_estimates;
@@ -16,17 +16,18 @@ classdef Blender < handle
         Ts;
     end
     methods
-        function obj = Blender(SOC_spacing, transfer_function, Ts, z_coordinates, electrode, const)
+        function obj = Blender(SOC_spacing, transfer_function, Ts, coordinate, electrode, const)
             obj.const = const;
             obj.electrode = electrode;
             obj.SOC_spacing = SOC_spacing;
             obj.transfer_function = transfer_function;
             obj.Ts = Ts;
-            obj.z_coordinates = z_coordinates;
+            obj.coordinate = coordinate;
             obj.ss_size = 0;
             for i = 1 : - SOC_spacing : 0
                 obj.SOC_lut = [obj.SOC_lut i];
             end
+
             obj.A_estimates = [];
             obj.B_estimates = [];
             obj.C_estimates = [];
@@ -52,12 +53,12 @@ classdef Blender < handle
         function create_models(obj, T_len, sampling_freq, Ts)
             for z = 1 : -obj.SOC_spacing : 0
                 cs = blending_step(obj, z);
-                [tf, res0, D_tf] = obj.transfer_function(cs, obj.z_coordinates, T_len, sampling_freq, obj.electrode, obj.const);
+                [tf, res0, D_tf] = obj.transfer_function(cs, obj.coordinate, T_len, sampling_freq, obj.electrode, obj.const);
                 [A, B, C, D_hankel] = dra(tf, res0, sampling_freq, T_len, obj.Ts, obj.const);
                 if isnan(D_tf)
                     if obj.electrode == 'neg'
                         D = D_hankel;
-                    else
+                    elseif obj.electrode == 'pos'
                         D = -D_hankel;
                     end
                 else
