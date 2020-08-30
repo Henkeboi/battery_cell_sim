@@ -3,51 +3,51 @@ disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
-%%for concentration = 5000 : 10000
-%    f = 200;
-%    T_len = 10;
-%    Ts = 0.1;
-%    [tf, res0, D] = tf_ce(100000*0.3, const.L_neg, T_len, f, 10, const);
-%    [A, B, C, D] = dra(tf, res0, f, T_len, Ts, const);
-%    S = ss(A, B, C, D, Ts);
-%    impulse(S);
-%    %if ~isstable(S)
-%    %    disp(concentration)
-%    %    return
-%    %end
-%    %continue;
-%    output = zeros(size(load_cycle, 1), 1);
-%    time_acc = 0;
-%    X = zeros(5, 1);
-%    for i = 1 : size(load_cycle, 1)
-%        delta_time = load_cycle(i, 1);
-%        current = load_cycle(i, 2);
-%        P = 2;
-%        U = current * delta_time / P;
-%        X = A * X + B * U / Ts;
-%        Y = C * X + D * U;
-%        %if i == 1
-%        %    S = ss(A, B, C, D, Ts);
-%        %    %bode(S)
-%        %    %impulse(S)
-%        %    pzmap(S)
-%        %    return
-%        %end
-%        output(i, 1) = Y;
-%        time(i) = time_acc;
-%        time_acc = time(i) + delta_time;
-%    end
-%%end
-%%disp("Done")
-%f5 = figure;
-%plot(time, output);
-%% hold on;
-%% plot(time, pots_pos, 'r');
-%title("Potse")
-%xlabel("Time")
-%ylabel("Potential [V]")
-%grid on;
-%return;
+
+f = 200;
+T_len = 1;
+Ts = 0.1;
+ce = 2000;
+
+x0 = const.L_neg - const.L_neg / 10;  % Neg
+x1 = const.L_neg + 0.9 * const.L_sep; % Sep
+x2 = const.L_neg + const.L_sep;  % Boundary 
+x3 = const.L_neg + const.L_sep + 0.1* const.L_pos; % Pos
+x4 = const.L_neg + const.L_sep + const.L_pos; % End
+
+[tf_pote, res0, D] = tf_pote(100000*0.3, ce, x4, T_len, f, const);
+[A, B, C, D] = dra(tf_pote, res0, f, T_len, Ts, const);
+
+output = zeros(size(load_cycle, 1), 1);
+time_acc = 0;
+X = zeros(5, 1);
+for i = 1 : size(load_cycle, 1)
+    delta_time = load_cycle(i, 1);
+    current = load_cycle(i, 2);
+    P = 2;
+    U = current * delta_time / P;
+    X = A * X + B * U / Ts;
+    Y = C * X + D * U;
+    %if i == 1
+    %    S = ss(A, B, C, D, Ts);
+    %    %bode(S)
+    %    %impulse(S)
+    %    pzmap(S)
+    %    return
+    %end
+    output(i, 1) = Y;
+    time(i) = time_acc;
+    time_acc = time(i) + delta_time;
+end
+f5 = figure;
+plot(time, output);
+% hold on;
+% plot(time, pots_pos, 'r');
+title("Pote")
+xlabel("Time")
+ylabel("Potential [V]")
+grid on;
+return;
 
 
 %% Calculations for the negative eletrode at z = 0.
@@ -116,15 +116,22 @@ pots_pos_blender = Blender(0.1, @tf_pots, potse_pos_Ts, [0], 'pos', const);
 pots_pos_blender.create_models(pots_pos_T_len, pots_pos_sampling);
 pots_pos_blender.sort();
 
-
 disp("Running blended ce dra.")
-ce_tot_sampling = 400;
-ce_tot_T_len = 100;
-ce_tot_Ts = 0.1;
+ce_neg_sampling = 200;
+ce_neg_T_len = 10;
+ce_neg_Ts = 0.1;
 x = const.L_neg - const.L_sep; 
-ce_neg_blender = Blender(0.1, @tf_ce, ce_tot_Ts, x, 'neg', const);
-ce_neg_blender.create_models(ce_tot_T_len, ce_tot_sampling);
+ce_neg_blender = Blender(0.1, @tf_ce, ce_neg_Ts, x, 'neg', const);
+ce_neg_blender.create_models(ce_neg_T_len, ce_neg_sampling);
 ce_neg_blender.sort();
+
+ce_pos_sampling = 200;
+ce_pos_T_len = 10;
+ce_pos_Ts = 0.1;
+x = const.L_neg  + const.L_pos; 
+ce_pos_blender = Blender(0.1, @tf_ce, ce_pos_Ts, x, 'pos', const);
+ce_pos_blender.create_models(ce_pos_T_len, ce_pos_sampling);
+ce_pos_blender.sort();
 
 disp("Simulating.")
 z_neg = zeros(size(load_cycle, 1), 1);
@@ -138,6 +145,7 @@ potse_pos = zeros(size(load_cycle, 1), 1);
 pots_neg = zeros(size(load_cycle, 1), 1);
 pots_pos = zeros(size(load_cycle, 1), 1);
 ce_neg = zeros(size(load_cycle, 1), 1);
+ce_pos = zeros(size(load_cycle, 1), 1);
 time = zeros(size(load_cycle, 1), 1);
 v = zeros(size(load_cycle, 1), 1);
 time_acc = 0;
@@ -179,6 +187,8 @@ for i = 1 : size(load_cycle, 1)
     % ce
     [ce_neg_X, ce_neg_Y, ce_neg_integrator_index] = ce_neg_blender.step(U, SOC_neg);
     ce_neg(i) = ce_neg_Y;
+    [ce_pos_X, ce_pos_Y, ce_pos_integrator_index] = ce_pos_blender.step(U, SOC_pos);
+    ce_pos(i) = ce_pos_Y;
 
     % if i == 1
     %     [A, B, C, D, Ts] = pots_neg_blender.blend_model(SOC_neg);
@@ -201,11 +211,10 @@ for i = 1 : size(load_cycle, 1)
     pots_pos(i) = pots_pos_Y + pots_pos_X(pots_pos_integrator_index); 
 
     % ce 
-
     %pote1 = 0.0000001;
     %pote2 = 0.0000001;
-    %ce_neg = cse_neg(i);
-    %ce_pos = cse_pos(i);
+    %ce_neg = ce_neg(i);
+    %ce_pos = ce_pos(i);
     %v(i) = calculate_voltage(cse_neg(i), cse_pos(i), j_neg(i), j_pos(i), pote1, pote2, ce_neg, ce_pos, const);
 
     time(i) = time_acc;
@@ -256,7 +265,10 @@ for i = 1 : size(load_cycle, 1)
         disp("NAN ce_neg")
         return;
     end
-
+    if isnan(ce_pos(i))
+        disp("NAN ce_pos")
+        return;
+    end
 end
 
 %disp("Plotting results.")
@@ -307,8 +319,8 @@ end
 
 f5 = figure;
 plot(time, ce_neg);
-%hold on;
-%plot(time, pots_pos, 'r');
+hold on;
+plot(time, ce_pos, 'r');
 title("ce")
 xlabel("Time")
 ylabel("Lithium concentration [mol / m^3]")
