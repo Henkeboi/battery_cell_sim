@@ -76,8 +76,7 @@ classdef Blender < handle
         function [X, Y, integrator_index] = step(obj, U, SOC)
             [A, B, C, D, T] = obj.blend_model(SOC);
             integrator_index = obj.ss_size;
-            U = U / obj.Ts;
-            X = A * T * obj.X + B * U;
+            X = A * T * obj.X + B * U * obj.Ts;
             Y = C * T * obj.X + D * U;
             obj.X = X;
         end

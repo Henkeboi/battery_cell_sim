@@ -29,5 +29,5 @@ function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_fr
     B_est = [extended_controllability(:, 1)]; 
     C_est = [extended_observability(1, :)];
     D_est = [hankel(1)];
-    res0 = res0; % z(1) choosen. TODO: Multiple z or x locations.
+    res0 = res0; 
 end
