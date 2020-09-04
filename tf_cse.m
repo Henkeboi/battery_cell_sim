@@ -1,13 +1,10 @@
-function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, electrode, const)
+function [tf_cse, res0, D] = tf_cse(cse, z, T_len, sampling_f, electrode, const)
     [s, nu] = calculate_s_nu(cse, T_len, sampling_f, electrode, const);
     [Rct, Rfilm, Rse, Rs, as, L, F, Ds, A, alpha, sigma, kappa, beta, eps, cs0, Uocv_d, transfer_number] = get_electrode_constants(s, electrode, const);
 
-    z = 0.1;
-
     tf_cse = (sigma * cosh(nu .* z) + kappa * cosh(nu * (z - 1))) ./ (as * F * L * A * Ds * (kappa + sigma) .* sinh(nu)) ...
-        .* (Rs .* nu ./ (1 - beta .* coth(beta)));
-   
-    tf_cse(1, 1) = 0;
+        .* (Rs .* nu ./ (1 - beta .* coth(beta))) - 1 ./ (eps * A * F * L .* s);
+    tf_cse(1, 1) = 1 ./ (eps * A * F * L);
     for i = 1 : size(tf_cse, 1)
         for j = 1 : size(tf_cse, 2)
             if isnan(tf_cse(i, j))
@@ -22,8 +19,8 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
         end
     end
 
-    res0 = 1 ./ (eps * A * F * L .* s);
-    D = 0;
+    res0 = -1 ./ (eps * A * F * L);
+    D = NaN;
 
     if electrode == 'pos'
         tf_cse = -tf_cse;
@@ -33,5 +30,4 @@ function [tf_cse, res0, D] = tf_cse(cse, z_coordinates, T_len, sampling_f, elect
     if any(isnan(tf_cse))
         error("NAN In tf_cse");
     end
-
 end

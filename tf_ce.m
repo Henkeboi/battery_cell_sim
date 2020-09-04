@@ -38,7 +38,6 @@ function [tf_ce, res0, D] = tf_ce(cse, x_location, T_len, freq, M, const)
         fun_phi_sep = @(x) ((k3 .* cos(sqrt(lambda .* fun_eps(x) ./ De_s) .* x) + k4 .* sin(sqrt(lambda .* fun_eps(x) ./ De_s) .* x))) .* ((L_n <= x) & (x < L_n + L_s)); 
         fun_phi_pos = @(x) ((k5 .* cos(sqrt(lambda .* fun_eps(x) ./ De_p) .* x) + k6 .* sin(sqrt(lambda .* fun_eps(x) ./ De_p) .* x)) .* ((L_n + L_s <= x) & (x <= L_tot)));
         phi_n = @(x) fun_phi_neg(x) + fun_phi_sep(x) + fun_phi_pos(x);
-         
         tf_ce = tf_ce + tf_ce_n  * phi_n(x_location);
     end
     

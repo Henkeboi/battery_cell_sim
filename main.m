@@ -3,334 +3,227 @@ disp("Loading data.")
 run('parameters.m');
 run('read_load_cycle.m')
 
-%f = 200;
-%T_len = 10;
-%Ts = 0.1;
-%ce = 2000;
-%x0 = const.L_neg - const.L_neg / 10;  % Neg
-%x1 = const.L_neg + 0.9 * const.L_sep; % Sep
-%x2 = const.L_neg + const.L_sep;  % Boundary 
-%x3 = const.L_neg + const.L_sep + 0.1* const.L_pos; % Pos
-%x4 = const.L_neg + const.L_sep + const.L_pos; % End
-%[tf_pote, res0, D] = tf_pote(100000*0.3, ce, x4, T_len, f, const);
-%[A, B, C, D] = dra(tf_pote, res0, f, T_len, Ts, const);
-
-%[tf_cse, res0, D] = tf_cse(const.cs0_neg, 0, T_len, f, 'pos', const);
-%[A, B, C, D] = dra(tf_cse, res0, f, T_len, Ts, const);
-%S = ss(A, B, C, D, Ts);
-%pzmap(S)
-%isstable(S)
-%impulse(S)
-
-%output = zeros(size(load_cycle, 1), 1);
-%time_acc = 0;
-%X = zeros(5, 1);
-%for i = 1 : size(load_cycle, 1)
-%    delta_time = load_cycle(i, 1);
-%    current = load_cycle(i, 2);
-%    P = 2;
-%    U = current * delta_time / P;
-%    X = A * X + B * U / Ts;
-%    Y = C * X + D * U;
-%    output(i, 1) = Y;
-%    time(i) = time_acc;
-%    time_acc = time(i) + delta_time;
-%end
-%f5 = figure;
-%plot(time, output);
-%title("Pote")
-%xlabel("Time")
-%ylabel("Potential [V]")
-%grid on;
-%return;
-%
-%
-
-
-
 %%% Calculations for the negative eletrode at z = 0.
 cs0_neg = const.cs0_neg;
 cs0_pos = const.cs0_pos;
 cs_max_neg = const.solid_max_c_neg;
 cs_max_pos = const.solid_max_c_pos;
+ce0_neg = const.ce0_neg;
+ce0_pos = const.ce0_pos;
 
-%disp("Running blended potse dra.")
-%potse_neg_sampling = 400;
-%potse_neg_T_len = 100;
-%potse_neg_Ts = 0.1;
-%potse_neg_blender = Blender(0.1, @tf_potse, potse_neg_Ts, [0], 'neg', const);
-%potse_neg_blender.create_models(potse_neg_T_len, potse_neg_sampling);
-%potse_neg_blender.sort();
-%
-%potse_pos_sampling = 200;
-%potse_pos_T_len = 10;
-%potse_pos_Ts = 0.1;
-%potse_pos_blender = Blender(0.1, @tf_potse, potse_pos_Ts, [0], 'pos', const);
-%potse_pos_blender.create_models(potse_pos_T_len, potse_pos_sampling);
-%potse_pos_blender.sort();
-%
-%disp("Running blended lithium flux dra.")
-%j_neg_sampling = 10000;
-%j_neg_T_len = 3;
-%j_neg_Ts = 0.1;
-%j_neg_blender = Blender(0.1, @tf_j, j_neg_Ts, [0], 'neg', const);
-%j_neg_blender.create_models(j_neg_T_len, j_neg_sampling);
-%j_neg_blender.sort();
-%
-%j_pos_sampling = 200;
-%j_pos_T_len = 10;
-%j_pos_Ts = 0.1;
-%j_pos_blender = Blender(0.1, @tf_j, j_pos_Ts, [0], 'pos', const);
-%j_pos_blender.create_models(j_pos_T_len, j_pos_sampling);
-%j_pos_blender.sort();
 
-disp("Running blended Lithium surface concentration dra.")
+%f = 200;
+%T_len = 20;
+%Ts = 0.5;
+%z = 0.0;
+%
+%[tf_delta_cse, res0, D] = tf_delta_cse(90000, z, T_len, f, 'pos', const);
+%[A, B, C, D] = dra(tf_delta_cse, res0, f, T_len, Ts, const);
+%S = ss(A, B, C, D, Ts);
+%
+%disp("Is stable: " + isstable(S))
+%%step(S)
+%
+%P = 2;
+%S = 144;
+%time_acc = 0;
+%time = zeros(size(load_cycle, 1), 1); 
+%measured_voltage = zeros(size(load_cycle, 1), 1);
+%X = zeros(5, 1);
+%Y = zeros(size(load_cycle, 1), 1);
+%cse0 = 90000;
+%a = zeros(size(load_cycle, 1), 1);
+%for i = 1 : size(load_cycle, 1)
+%    % Find U.
+%    delta_time = load_cycle(i, 1);
+%    current = load_cycle(i, 2);
+%    measured_voltage(i) = load_cycle(i, 3) / S;
+%    U = current * delta_time / P;
+%    X = A * X + B * U;
+%    Y(i) = C * X + D * U;  
+%
+%    time(i) = time_acc;
+%    time_acc = time(i) + delta_time;
+%    cse0 = cse0 - Y(i);
+%    a(i) = cse0;
+%end
+%plot(time, a)
+%return
+
+disp("Running blended Lithium flux dra.")
+j_neg_sampling_f = 400;
+j_neg_T_len = 10;
+j_neg_Ts = 0.1;
+j_blender_neg = Blender(0.1, @tf_j, j_neg_Ts, 0, 'neg', const);
+j_blender_neg.create_models(j_neg_T_len, j_neg_sampling_f);
+j_blender_neg.sort();
+
+j_pos_sampling_f = 400;
+j_pos_T_len = 10;
+j_pos_Ts = 0.1;
+j_blender_pos = Blender(0.1, @tf_j, j_pos_Ts, 0, 'pos', const);
+j_blender_pos.create_models(j_pos_T_len, j_pos_sampling_f);
+j_blender_pos.sort();
+
+disp("Running blended cse dra.")
 cse_neg_sampling_f = 400;
 cse_neg_T_len = 10;
 cse_neg_Ts = 0.1;
-cse_blender_neg = Blender(0.1, @tf_cse, cse_neg_Ts, [0], 'neg', const);
+cse_blender_neg = Blender(0.1, @tf_cse, cse_neg_Ts, 0.0, 'neg', const);
 cse_blender_neg.create_models(cse_neg_T_len, cse_neg_sampling_f);
 cse_blender_neg.sort();
 
 cse_pos_sampling_f = 400;
 cse_pos_T_len = 10;
 cse_pos_Ts = 0.1;
-cse_blender_pos = Blender(0.1, @tf_cse, cse_pos_Ts, [0], 'pos', const);
+cse_blender_pos = Blender(0.1, @tf_cse, cse_pos_Ts, 0.1, 'pos', const);
 cse_blender_pos.create_models(cse_pos_T_len, cse_pos_sampling_f);
 cse_blender_pos.sort();
- 
-%disp("Running blended pots dra.")
-%pots_neg_sampling = 300;
-%pots_neg_T_len = 10;
-%potse_neg_Ts = 0.1;
-%pots_neg_blender = Blender(0.1, @tf_pots, potse_neg_Ts, [0], 'neg', const);
-%pots_neg_blender.create_models(pots_neg_T_len, pots_neg_sampling);
-%pots_neg_blender.sort();
+
+%T_len_cse_neg = 20;
+%Ts_cse_neg = 0.1;
+%z_cse_neg = 0;
+%[tf_delta_cse_neg, res0_cse_neg, D_cse_neg] = tf_delta_cse(10000, z_cse_neg, T_len_cse_neg, f_cse_neg, 'neg', const);
+%[A_cse_neg, B_cse_neg, C_cse_neg, D_cse_neg] = dra(tf_delta_cse_neg, res0_cse_neg, f_cse_neg, T_len_cse_neg, Ts_cse_neg, const);
 %
-%pots_pos_sampling = 200;
-%pots_pos_T_len = 10;
-%potse_pos_Ts = 0.1;
-%pots_pos_blender = Blender(0.1, @tf_pots, potse_pos_Ts, [0], 'pos', const);
-%pots_pos_blender.create_models(pots_pos_T_len, pots_pos_sampling);
-%pots_pos_blender.sort();
-%
-%disp("Running blended ce dra.")
-%ce_neg_sampling = 200;
-%ce_neg_T_len = 10;
-%ce_neg_Ts = 0.1;
-%x = const.L_neg - const.L_sep; 
-%ce_neg_blender = Blender(0.1, @tf_ce, ce_neg_Ts, x, 'neg', const);
-%ce_neg_blender.create_models(ce_neg_T_len, ce_neg_sampling);
-%ce_neg_blender.sort();
-%
-%ce_pos_sampling = 200;
-%ce_pos_T_len = 10;
-%ce_pos_Ts = 0.1;
-%x = const.L_neg  + const.L_pos; 
-%ce_pos_blender = Blender(0.1, @tf_ce, ce_pos_Ts, x, 'pos', const);
-%ce_pos_blender.create_models(ce_pos_T_len, ce_pos_sampling);
-%ce_pos_blender.sort();
+%f_cse_pos = 200;
+%T_len_cse_pos = 10;
+%Ts_cse_pos = 10;
+%z_cse_pos = 0;
+%[tf_delta_cse_pos, res0_cse_pos, D_cse_pos] = tf_delta_cse(10000, z_cse_pos, T_len_cse_pos, f_cse_pos, 'pos', const);
+%[A_cse_pos, B_cse_pos, C_cse_pos, D_cse_pos] = dra(tf_delta_cse_pos, res0_cse_pos, f_cse_pos, T_len_cse_pos, Ts_cse_pos, const);
+
+disp("Running blended ce dra.")
+ce_neg_sampling = 200;
+ce_neg_T_len = 10;
+ce_neg_Ts = 0.1;
+x = 0; 
+ce_blender_neg = Blender(0.1, @tf_ce, ce_neg_Ts, x, 'neg', const);
+ce_blender_neg.create_models(ce_neg_T_len, ce_neg_sampling);
+ce_blender_neg.sort();
+
+ce_pos_sampling = 200;
+ce_pos_T_len = 10;
+ce_pos_Ts = 0.1;
+x = const.L_neg + const.L_sep + const.L_pos; 
+ce_blender_pos = Blender(0.1, @tf_ce, ce_pos_Ts, x, 'pos', const);
+ce_blender_pos.create_models(ce_pos_T_len, ce_pos_sampling);
+ce_blender_pos.sort();
+
+disp("Running blended pote dra.")
+pote_L_tot_sampling = 200;
+pote_L_tot_T_len = 10;
+pote_L_tot_Ts = 0.1;
+x = const.L_neg + const.L_sep + const.L_pos; 
+pote_blender_L_tot = Blender(0.1, @tf_pote, pote_L_tot_Ts, x, 'neg', const);
+pote_blender_L_tot.create_models(pote_L_tot_T_len, pote_L_tot_sampling);
+pote_blender_L_tot.sort();
 
 disp("Simulating.")
 z_neg = zeros(size(load_cycle, 1), 1);
 z_pos = zeros(size(load_cycle, 1), 1);
-cse_neg = zeros(size(load_cycle, 1), 1);
-cse_pos = zeros(size(load_cycle, 1), 1);
 j_neg = zeros(size(load_cycle, 1), 1);
 j_pos = zeros(size(load_cycle, 1), 1);
-potse_neg = zeros(size(load_cycle, 1), 1);
-potse_pos = zeros(size(load_cycle, 1), 1);
 pots_neg = zeros(size(load_cycle, 1), 1);
 pots_pos = zeros(size(load_cycle, 1), 1);
+cse_neg = zeros(size(load_cycle, 1), 1);
+cse_pos = zeros(size(load_cycle, 1), 1);
 ce_neg = zeros(size(load_cycle, 1), 1);
 ce_pos = zeros(size(load_cycle, 1), 1);
-time = zeros(size(load_cycle, 1), 1);
+potse_neg = zeros(size(load_cycle, 1), 1);
+potse_pos = zeros(size(load_cycle, 1), 1);
+pote_L_tot_1 = zeros(size(load_cycle, 1), 1);
+pote_L_tot_2 = zeros(size(load_cycle, 1), 1);
 v = zeros(size(load_cycle, 1), 1);
+measured_voltage = zeros(size(load_cycle, 1), 1);
+time = zeros(size(load_cycle, 1), 1);
 time_acc = 0;
+S = 144;
+P = 2;
 
+X_cse_neg = zeros(5, 1);
+X_cse_pos = zeros(5, 1);
 SOC_pos = 1;
 SOC_neg = 1;
-
-Ts = 0.1;
-f = 200;
-T_len = 10;
-[tf_cse_neg, res0_neg, D_neg] = tf_cse(const.cs0_neg, 0.1, T_len, f, 'neg', const);
-[A_neg, B_neg, C_neg, D_neg] = dra(tf_cse_neg, res0_neg, f, T_len, Ts, const);
-X_neg = zeros(5, 1);
-cs_avg_neg = zeros(size(load_cycle, 1), 1);
-prev_cse_avg_neg = cs0_neg;
-
-[tf_cse_pos, res0_pos, D_pos] = tf_cse(const.cs0_pos, 0.1, T_len, f, 'pos', const);
-[A_pos, B_pos, C_pos, D_pos] = dra(tf_cse_pos, res0_pos, f, T_len, Ts, const);
-X_pos = zeros(5, 1);
-cs_avg_pos = zeros(size(load_cycle, 1), 1);
-prev_cse_avg_pos = cs0_pos;
 
 for i = 1 : size(load_cycle, 1)
     % Find U.
     delta_time = load_cycle(i, 1);
     current = load_cycle(i, 2);
-    P = 2;
+    measured_voltage(i) = load_cycle(i, 3) / S;
     U = current * delta_time / P;
 
+    [j_neg_X, j_neg_Y, j_neg_integrator_index] = j_blender_neg.step(U, SOC_neg);
+    j_neg(i) = j_neg_Y;
+    [j_pos_X, j_pos_Y, j_pos_integrator_index] = j_blender_pos.step(U, SOC_pos);
+    j_pos(i) = j_pos_Y;
+
     [cse_neg_X, cse_neg_Y, cse_neg_integrator_index] = cse_blender_neg.step(U, SOC_neg);
-    cse_neg(i) = cse_neg_Y + cs0_neg;
+    %cse_neg(i) = cse_neg_Y + cs0_neg; % Debias
+    X_cse_neg_test = A_cse_neg * X_cse_neg + B_cse_neg * U; % Test
+    cse_neg_test(i) = C_cse_neg * X_cse_neg + D_cse_neg * U; % Test
     cs_avg_neg(i) = cs0_neg - cse_neg_X(cse_neg_integrator_index);
     z_neg(i) = (cs_avg_neg(i) - const.solid_max_c_neg * const.x0_neg) / (const.solid_max_c_neg * const.x100_neg - const.solid_max_c_neg * const.x0_neg);
     SOC_neg = z_neg(i);
-    disp(SOC_neg)
 
-    %[cse_pos_X, cse_pos_Y, cse_pos_integrator_index] = cse_pos_blender.step(U, SOC_pos);
-    %cse_pos(i) = cse_pos_Y + cs0_pos;
-    %z_pos(i) = calculate_SOC(cs0_pos, cse_pos_X(cse_pos_integrator_index), 'pos', const); 
-    %SOC_pos = z_pos(i);
-    %cs_avg_pos = cs0_pos + cse_pos_X(cse_pos_integrator_index);
+    [cse_pos_X, cse_pos_Y, cse_pos_integrator_index] = cse_blender_pos.step(U, SOC_pos);
+    %cse_pos(i) = cse_pos_Y + cs0_pos; % Debias
+    X_cse_pos_test = A_cse_pos * X_cse_pos + B_cse_pos; % Test
+    cse_pos_test(i) = C_cse_pos * X_cse_pos + D_cse_pos; % Test
+    cs_avg_pos(i) = cs0_pos + cse_pos_X(cse_pos_integrator_index);
+    z_pos(i) = 1 - (cs_avg_pos(i) - const.solid_max_c_pos * const.x0_pos) / (const.solid_max_c_pos * const.x100_pos - const.solid_max_c_pos * const.x0_pos);
+    SOC_pos = z_pos(i);
 
-    %% CSE without blending
-    %X_neg = A_neg * X_neg + B_neg * U;
-    %Y_neg = C_neg * X_neg + D_neg * U;
-    %cse_neg(i) = Y_neg + const.cs0_neg;
-    %cs_avg_neg(i) = prev_cse_avg_neg - X_neg(5) / (const.eps_s_neg * const.A * const.F * const.L_neg);
-    %prev_cse_avg_neg = cs_avg_neg(i);
-    %z_neg(i) = (cs_avg_neg(i) - const.solid_max_c_neg * const.x0_neg) / (const.solid_max_c_neg * const.x100_neg - const.solid_max_c_neg * const.x0_neg);
-    %SOC_neg = z_neg(i);
-    %
-    %X_pos = A_pos * X_pos + B_pos * U;
-    %Y_pos = C_pos * X_pos + D_pos * U;
-    %cse_pos(i) = Y_pos + const.cs0_pos;
-    %cs_avg_pos(i) = prev_cse_avg_pos - X_pos(5) / (const.eps_s_pos * const.A * const.F * const.L_pos);
-    %prev_cse_avg_pos = cs_avg_pos(i);
-    %z_pos(i) = 1 - (cs_avg_pos(i) - const.solid_max_c_pos * const.x0_pos) / (const.solid_max_c_pos * const.x100_pos - const.solid_max_c_pos * const.x0_pos);
-    %SOC_pos = z_pos(i);
-    
-    % potse
-    %[potse_neg_X, potse_neg_Y, potse_neg_integrator_index] = potse_neg_blender.step(U, SOC_neg);
-    %potse_neg(i) = potse_neg_Y;
-    %[potse_pos_X, potse_pos_Y, potse_pos_integrator_index] = potse_pos_blender.step(U, SOC_pos);
-    %potse_pos(i) = potse_pos_Y + potse_pos_X(potse_pos_integrator_index); 
+    [ce_neg_X, ce_neg_Y, ce_neg_integrator_index] = ce_blender_neg.step(U, SOC_neg);
+    ce_neg(i) = ce_neg_Y + ce0_neg;
+    [ce_pos_X, ce_pos_Y, ce_pos_integrator_index] = ce_blender_pos.step(U, SOC_pos);
+    ce_pos(i) = ce_pos_Y + ce0_pos;
 
-    % j
-    %[j_neg_X, j_neg_Y, j_neg_integrator_index] = j_neg_blender.step(U, SOC_neg);
-    %j_neg(i) = j_neg_Y;
-    %[j_pos_X, j_pos_Y, j_pos_integrator_index] = j_pos_blender.step(U, SOC_pos);
-    %j_pos(i) = j_pos_Y;
+    [pote_L_tot_X, pote_L_tot_Y, pote_L_tot_integrator_index] = pote_blender_L_tot.step(U, SOC_pos);
+    pote_L_tot_1(i) = pote_L_tot_Y;
+    pote_L_tot_2(i) = 2 * const.R * const.temp * (1 - const.transfer_number_pos) * (log(ce_pos(i)) - log(ce0_pos)) / const.F;
 
-    % ce
-    %[ce_neg_X, ce_neg_Y, ce_neg_integrator_index] = ce_neg_blender.step(U, SOC_neg);
-    %ce_neg(i) = ce_neg_Y;
-    %[ce_pos_X, ce_pos_Y, ce_pos_integrator_index] = ce_pos_blender.step(U, SOC_pos);
-    %ce_pos(i) = ce_pos_Y;
-
-    % pots
-    %[pots_neg_X, pots_neg_Y, pots_neg_integrator_index] = pots_neg_blender.step(U, SOC_neg);
-    %pots_neg(i) = pots_neg_Y;
-    %[pots_pos_X, pots_pos_Y, pots_pos_integrator_index] = pots_pos_blender.step(U, SOC_pos);
-    %pots_pos(i) = pots_pos_Y + pots_pos_X(pots_pos_integrator_index); 
-
-    % ce 
-    %pote1 = 0.0000001;
-    %pote2 = 0.0000001;
-    %ce_neg = ce_neg(i);
-    %ce_pos = ce_pos(i);
-    %v(i) = calculate_voltage(cse_neg(i), cse_pos(i), j_neg(i), j_pos(i), pote1, pote2, ce_neg, ce_pos, const);
+    %v(i) = calculate_voltage(j_neg(i), j_pos(i), cse_neg(i), cse_pos(i), ce_neg(i), ce_pos(i), pote_L_tot_1(i), pote_L_tot_2(i), const);
+    v(i) = calculate_voltage(j_neg(i), j_pos(i), cse_neg_test(i), cse_pos_test(i), ce_neg(i), ce_pos(i), pote_L_tot_1(i), pote_L_tot_2(i), const); % Test
 
     time(i) = time_acc;
     time_acc = time(i) + delta_time;
-
-    if isnan(z_neg(i))
-        disp("Nan z_neg")
-        return;
-    end
-    if isnan(z_pos(i))
-        disp("Nan z_pos")
-        return;
-    end
-    %if isnan(cse_neg(i))
-    %    disp("Nan cse_neg")
-    %    break;
-    %end
-    %if isnan(cse_pos(i))
-    %    disp("NAN cse_pos")
-    %    break;
-    %end
-    if isnan(j_neg(i))
-        disp("NAN j_neg")
-        break;
-    end
-    if isnan(j_pos(i))
-        disp("NAN j_pos")
-        break;
-    end
-    if isnan(potse_neg(i))
-        disp("NAN potse_neg")
-        return;
-    end
-    if isnan(potse_pos(i))
-        disp("NAN potse_pos")
-        return;
-    end
-    if isnan(pots_neg(i))
-        disp("NAN pots_neg")
-        return;
-    end
-    if isnan(pots_pos(i))
-        disp("NAN pots_pos")
-        return;
-    end
-    if isnan(ce_neg(i))
-        disp("NAN ce_neg")
-        return;
-    end
-    if isnan(ce_pos(i))
-        disp("NAN ce_pos")
-        return;
-    end
 end
 
-%disp("Plotting results.")
-%f1 = figure;
-%plot(time, potse_neg);
+f1 = figure;
+plot(time, v);
+hold on;
+plot(time, measured_voltage);
+title("Voltage")
+xlabel("Time")
+ylabel("[V]")
+grid on;
+
+%f2 = figure;
+%plot(time, z_neg);
 %hold on;
-%plot(time, potse_pos, 'r');
-%title("Potse at the electrodes")
+%plot(time, z_pos, 'r');
+%title("SOC")
 %xlabel("Time")
-%ylabel("Potential [V]")
+%ylabel("SOC")
 %grid on;
 
 %f2 = figure;
-%plot(time, j_neg);
+%plot(time, cse_neg);
 %hold on;
-%plot(time, j_pos, 'r');
-%title("Lithium flux at the electrodes")
+%plot(time, cse_pos, 'r');
+%title("Average surface concentration")
 %xlabel("Time")
-%ylabel("Lithium flux [mol / m^2 / s]")
+%ylabel("Lithium concentration [mol / m^3]")
 %grid on;
 
-f3 = figure;
-plot(time, z_neg);
-hold on;
-plot(time, z_pos, 'r');
-title("SOC")
-xlabel("Time")
-ylabel("SOC")
-grid on;
-
-f4 = figure;
-plot(time, cse_neg);
-hold on;
-plot(time, cse_pos, 'r');
-title("Average surface concentration")
-xlabel("Time")
-ylabel("Lithium concentration [mol / m^3]")
-grid on;
-%
-%f5 = figure;
-%plot(time, pots_neg);
+%f3 = figure;
+%plot(time, potse_neg);
 %hold on;
-%plot(time, pots_pos, 'r');
-%title("Pots at the electrodes")
+%plot(time, potse_pos, 'r');
+%title("potse")
 %xlabel("Time")
-%ylabel("Potential [V]")
+%ylabel("[V]")
 %grid on;
 
 %f5 = figure;
@@ -340,4 +233,22 @@ grid on;
 %title("ce")
 %xlabel("Time")
 %ylabel("Lithium concentration [mol / m^3]")
+%grid on;
+
+%f6 = figure;
+%plot(time, pote_L_tot_1);
+%hold on;
+%plot(time, pote_L_tot_2, 'r');
+%title("Pote")
+%xlabel("Time")
+%ylabel("[V]")
+%grid on;
+
+%f6 = figure;
+%plot(time, j_neg);
+%hold on;
+%plot(time, j_pos, 'r');
+%title("j")
+%xlabel("Time")
+%ylabel("[V]")
 %grid on;

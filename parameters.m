@@ -38,17 +38,17 @@ const.sigma_eff_pos = const.sigma_norm_pos * (const.eps_s_pos ^ const.brug_pos);
 
 const.as_neg = 3 * const.eps_s_neg / const.radius_neg;
 const.as_pos = 3 * const.eps_s_pos / const.radius_pos;
-const.x100_neg = 0.48;
-const.x100_pos = 0.8;
-const.x0_neg = 0.05;
-const.x0_pos = 0.2;
-const.solid_max_c_neg = 5000;
-const.solid_max_c_pos = 5000;
+const.x100_neg = 0.4;
+const.x100_pos = 0.9;
+const.x0_neg = 0.1;
+const.x0_pos = 0.5;
+const.solid_max_c_neg = 10000;
+const.solid_max_c_pos = 10000;
 const.cs0_neg = const.solid_max_c_neg * const.x100_neg;
 const.cs0_pos = const.solid_max_c_pos * const.x0_pos;
-const.ce0_neg = 2000;
-const.ce0_sep = 2000;
-const.ce0_pos = 2000;
+const.ce0_neg = 10000;
+const.ce0_sep = 10000;
+const.ce0_pos = 10000;
 const.diffusivity_neg = 3.9e-14;
 const.diffusivity_pos = 1e-13;
 const.De_neg = 7.5e-11;
@@ -60,9 +60,9 @@ const.Deeff_pos = const.De_pos * const.eps_e_pos ^ const.brug_pos;
 const.alpha_neg = 0.5;
 const.alpha_pos = 0.5;
 const.temp = 25;
+
 const.j0_neg = const.reaction_rate_neg * const.ce0_neg ^ (1 - const.alpha_neg) * (const.solid_max_c_neg - const.cs0_neg) ^ (1 - const.alpha_neg) * const.cs0_neg ^ const.alpha_neg; 
 const.j0_pos = const.reaction_rate_pos * const.ce0_pos ^ (1 - const.alpha_pos) * (const.solid_max_c_pos - const.cs0_pos) ^ (1 - const.alpha_pos) * const.cs0_pos ^ const.alpha_pos; 
-
 %const.j0_neg = const.kappa_norm_neg * const.ce0_neg ^ (1 - const.alpha_neg) * (const.solid_max_c_neg - const.cs0_neg) ^ (1 - const.alpha_neg) * const.cs0_neg ^ const.alpha_neg; 
 %const.j0_pos = const.kappa_norm_pos * const.ce0_pos ^ (1 - const.alpha_pos) * (const.solid_max_c_pos - const.cs0_pos) ^ (1 - const.alpha_pos) * const.cs0_pos ^ const.alpha_pos; 
 

@@ -1,4 +1,8 @@
-function [tf_pote, res0, D] = tf_pote(cse, ce, x, T_len, sampling_f, const)
+function [tf_pote, res0, D] = tf_pote(cse, x, T_len, sampling_f, electrode, const)
+    %TODO:
+    ce = const.ce0_neg;
+    % END
+
     if x <= const.L_neg
         region = 'neg';
         electrode = 'neg';
@@ -43,7 +47,6 @@ function [tf_pote, res0, D] = tf_pote(cse, ce, x, T_len, sampling_f, const)
     else
         error("x location to large.")
     end
-
     
     if region == 'neg' % At the negative electrode / separator boundary.
         tf_pote = -L * (sigma - kappa) * tanh(nu ./ 2) ./ (A * kappa * (kappa + sigma) .* nu) - L / (A * (kappa + sigma));

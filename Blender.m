@@ -51,19 +51,19 @@ classdef Blender < handle
         end
 
         function create_models(obj, T_len, sampling_freq, Ts)
+            lower_limit = 0.3;
+            upper_limit = 0.7;
             for z = 1 : -obj.SOC_spacing : 0
                 cs = blending_step(obj, z);
                 [tf, res0, D_tf] = obj.transfer_function(cs, obj.coordinate, T_len, sampling_freq, obj.electrode, obj.const);
                 [A, B, C, D_hankel] = dra(tf, res0, sampling_freq, T_len, obj.Ts, obj.const);
                 if isnan(D_tf)
-                    if obj.electrode == 'neg'
-                        D = D_hankel;
-                    elseif obj.electrode == 'pos'
-                        D = -D_hankel;
-                    end
+                    D = D_hankel;
                 else
                     D = D_tf;
                 end
+                S = ss(A, B, C, D, obj.Ts);
+
                 [A, B, C] = multi_dra(A, B, C, obj.Ts, res0);
                 obj.A_estimates = [obj.A_estimates A];
                 obj.B_estimates = [obj.B_estimates B];

@@ -1,4 +1,4 @@
-function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_freq, T_len, T_shifted, const)
+function [A, B, C, D] = dra(transfer_function, res0, sampling_freq, T_len, T_shifted, const)
     % sampling_freq and T_len needs to be the same as in the transfer function.
     T = 1 / sampling_freq;
     num_samples = 2 ^ (ceil(log2(T_len * sampling_freq)));
@@ -25,9 +25,8 @@ function [A_est, B_est, C_est, D_est] = dra(transfer_function, res0, sampling_fr
     extended_observability = U * sigma;
     extended_controllability = sigma * V';
 
-    A_est = [pinv(extended_observability) * H_shifted * pinv(extended_controllability)];
-    B_est = [extended_controllability(:, 1)]; 
-    C_est = [extended_observability(1, :)];
-    D_est = [hankel(1)];
-    res0 = res0; 
+    A = [pinv(extended_observability) * H_shifted * pinv(extended_controllability)];
+    B = [extended_controllability(:, 1)]; 
+    C = [extended_observability(1, :)];
+    D = [hankel(1)];
 end

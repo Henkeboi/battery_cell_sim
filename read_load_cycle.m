@@ -15,5 +15,6 @@ delta_time = data.time;
 for i = 1 : size(delta_time, 1) - 1
     delta_time(i, 1) = delta_time(i + 1, 1) - delta_time(i, 1);
 end
+
 delta_time(end, 1) = 0;
-load_cycle = [delta_time, data.current];
+load_cycle = [delta_time, data.current, data.voltage];
